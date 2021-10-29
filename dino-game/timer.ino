@@ -1,7 +1,3 @@
-/*
- *  SOURCE: https://gist.github.com/nonsintetic/ad13e70f164801325f5f552f84306d6f
- */
-
 /* JUMP HANDLER */
 void TC5_Handler(void)
 {
@@ -11,8 +7,6 @@ void TC5_Handler(void)
 }
 
 // Configures the TC to generate output events at the sample frequency.
-// Configures the TC in Frequency Generation mode, with an event output once
-// each time the audio sample frequency period expires.
 void tcConfigure(int sampleRate)
 {
     // select the generic clock generator used as source to the generic clock multiplexer
@@ -26,13 +20,8 @@ void tcConfigure(int sampleRate)
     // Set TC5 waveform generation mode to 'match frequency'
     TC5->COUNT16.CTRLA.reg |= TC_CTRLA_WAVEGEN_MFRQ;
     // set prescaler
-    // the clock normally counts at the GCLK_TC frequency, but we can set it to divide that frequency to slow it down
-    // you can use different prescaler divisons here like TC_CTRLA_PRESCALER_DIV1 to get a different range
     TC5->COUNT16.CTRLA.reg |= TC_CTRLA_PRESCALER_DIV1024 | TC_CTRLA_ENABLE; // it will divide GCLK_TC frequency by 1024
     // set the compare-capture register.
-    // The counter will count up to this value (it's a 16bit counter so we use uint16_t)
-    // this is how we fine-tune the frequency, make it count to a lower or higher value
-    // system clock should be 1MHz (8MHz/8) at Reset by default
     TC5->COUNT16.CC[0].reg = (uint16_t)(SystemCoreClock / sampleRate);
     while (tcIsSyncing());
 
@@ -48,7 +37,6 @@ void tcConfigure(int sampleRate)
 }
 
 // Function that is used to check if TC5 is done syncing
-// returns true when it is done syncing
 bool tcIsSyncing()
 {
     return TC5->COUNT16.STATUS.reg & TC_STATUS_SYNCBUSY;

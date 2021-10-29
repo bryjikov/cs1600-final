@@ -1,4 +1,5 @@
 #include <LiquidCrystal.h>
+#include "watchdog.h"
 
 byte arrows[8][8] = {{B00100, B01110, B11111, B00000, B00000, B00000, B00000, B00000},
                      {B00000, B11111, B01110, B00100, B00000, B00000, B00000, B00000},
@@ -37,6 +38,7 @@ void setup()
     pinMode(buttonPin, INPUT);
     attachInterrupt(digitalPinToInterrupt(buttonPin), jumpButtonPressInterrupt, RISING);
     tcConfigure(sampleRate); // configure the timer to run at <sampleRate>Hertz
+    setup_watchdog();
 }
 
 void display_cursor(byte x, byte y)
@@ -53,8 +55,9 @@ void display_cursor(byte x, byte y)
 
 void loop()
 {
-    display_cursor(8, positionY);
+    WDT->CLEAR.reg = WDT_CLEAR_CLEAR(165);
     update_player_state(millis());
+    display_cursor(8, positionY);
 }
 
 void update_player_state(long mils)
