@@ -46,11 +46,6 @@ void setup()
   pinMode(buttonPin, INPUT);
   attachInterrupt(digitalPinToInterrupt(buttonPin), jumpButtonPressInterrupt, RISING);
   tcConfigure(sampleRate); // configure the timer to run at <sampleRate>Hertz
-
-//  // setup and start TC4 for LED pulsation
-//  tc4Configure(sampleRate);
-//  tc4StartCounter();
-
   pinMode(ledPin, OUTPUT);
 }
 
@@ -67,14 +62,14 @@ void display_cursor(byte x, byte y)
 }
 
 /**
- * Update the pulsing LED's brightness to cycle between the
- * min and max PWM values, so the LED pulsates constantly.
- */
+   Update the pulsing LED's brightness to cycle between the
+   min and max PWM values, so the LED pulsates constantly.
+*/
 void updateLED(void)
 {
   // set the LED at current brightness
   analogWrite(ledPin, ledBrightness);
-  
+
   // increase/decrease brightness
   if (brightnessAscending) {
     ledBrightness++;
