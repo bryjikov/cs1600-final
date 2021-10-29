@@ -18,6 +18,8 @@ boolean toggle0;
 uint32_t sampleRate = 1000; // sample rate in milliseconds, determines how often TC5_Handler is called
 bool jump = false;
 
+const int ledPin = 6;
+
 void setup()
 {
     Serial.begin(9600);
@@ -29,6 +31,12 @@ void setup()
     attachInterrupt(digitalPinToInterrupt(buttonPin), jumpButtonPressInterrupt, RISING);
 
     tcConfigure(sampleRate); // configure the timer to run at <sampleRate>Hertz
+
+    // setup and start TC4 for LED pulsation
+    tc4Configure(sampleRate);
+    tc4StartCounter();
+
+    pinMode(ledPin, OUTPUT);
 }
 
 void display_cursor(byte x, byte y)
