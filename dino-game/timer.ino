@@ -2,6 +2,9 @@
 void TC5_Handler(void)
 {
     tcDisable();
+
+    Serial.println("In TC5 handler!");
+    
     jump_end_flag = true;
     TC5->COUNT16.INTFLAG.bit.MC0 = 1; // Writing a 1 to INTFLAG.bit.MC0 clears the interrupt so that it will run again
 }
