@@ -11,25 +11,33 @@ byte arrows[8][8] = {{B00100, B01110, B11111, B00000, B00000, B00000, B00000, B0
 
 const int rs = 0, en = 1, d4 = 2, d5 = 3, d6 = 4, d7 = 5;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
-
 const int buttonPin = 8;
 int positionY = 3;
-boolean toggle0;
 uint32_t sampleRate = 1000; // sample rate in milliseconds, determines how often TC5_Handler is called
-bool jump = false;
+
+/* FLAGS */
+volatile bool jump_start_flag = false;
+volatile bool jump_end_flag = false;
+/* FLAGS */
+
+typedef enum
+{
+    INACTIVE = 0,
+    RUNNING = 1,
+    JUMPING = 2,
+    /* .. continue ... */
+} playerState;
+
+playerState PLAYER_STATE = RUNNING;
 
 const int ledPin = 6;
 
 void setup()
 {
     Serial.begin(9600);
-    while (!Serial)
-        ;
-
     lcd.begin(16, 2);
     pinMode(buttonPin, INPUT);
     attachInterrupt(digitalPinToInterrupt(buttonPin), jumpButtonPressInterrupt, RISING);
-
     tcConfigure(sampleRate); // configure the timer to run at <sampleRate>Hertz
 
     // setup and start TC4 for LED pulsation
@@ -53,119 +61,63 @@ void display_cursor(byte x, byte y)
 
 void loop()
 {
-    if(jump) {
+    display_cursor(8, positionY);
+    update_player_state(millis());
+}
+
+void update_player_state(long mils)
+{
+    playerState NEXT_STATE = PLAYER_STATE;
+    switch (PLAYER_STATE)
+    {
+        case INACTIVE:
+            NEXT_STATE = player_state_inactive();
+            break;
+        case RUNNING:
+            NEXT_STATE = player_state_running();
+            break;
+        case JUMPING:
+            NEXT_STATE = player_state_jumping();
+            break;
+        default:
+            break;
+    }
+    PLAYER_STATE = NEXT_STATE;
+}
+
+playerState player_state_inactive()
+{
+    return INACTIVE;
+}
+
+playerState player_state_running()
+{
+    if (jump_start_flag)
+    {
         positionY = 2;
         tcStartCounter();
-        jump = false;
+        jump_start_flag = false;
+        return JUMPING;
     }
-    display_cursor(8, positionY);
-    // if(digitalRead(buttonPin) == HIGH) {
-    //     display_cursor(9, 2);
-    //     delay(2000);
-    // }
-    // display_cursor(8, 2);
+    else {
+        return RUNNING;
+    }
+}
+
+playerState player_state_jumping()
+{
+    if (jump_end_flag)
+    {
+        positionY = 3;
+        jump_end_flag = false;
+        return RUNNING;
+    }
+    else {
+        return JUMPING;
+    }
 }
 
 void jumpButtonPressInterrupt()
 {
-    jump = true;
-}
-
-void TC5_Handler(void)
-{
-    positionY = 3;
-    tcDisable();
-    // YOUR CODE HERE
-    if (toggle0 == true)
-    {
-        digitalWrite(LED_BUILTIN, HIGH);
-        toggle0 = false;
-    }
-    else
-    {
-        digitalWrite(LED_BUILTIN, LOW);
-        toggle0 = true;
-    }
-    // END OF YOUR CODE
-    TC5->COUNT16.INTFLAG.bit.MC0 = 1; // Writing a 1 to INTFLAG.bit.MC0 clears the interrupt so that it will run again
-}
-
-/*
- *  SOURCE: https://gist.github.com/nonsintetic/ad13e70f164801325f5f552f84306d6f
- *
- *  TIMER SPECIFIC FUNCTIONS FOLLOW
- *  you shouldn't change these unless you know what you're doing
- */
-
-// Configures the TC to generate output events at the sample frequency.
-// Configures the TC in Frequency Generation mode, with an event output once
-// each time the audio sample frequency period expires.
-void tcConfigure(int sampleRate)
-{
-    // select the generic clock generator used as source to the generic clock multiplexer
-    GCLK->CLKCTRL.reg = (uint16_t)(GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID(GCM_TC4_TC5));
-    while (GCLK->STATUS.bit.SYNCBUSY)
-        ;
-
-    tcReset(); // reset TC5
-
-    // Set Timer counter 5 Mode to 16 bits, it will become a 16bit counter ('mode1' in the datasheet)
-    TC5->COUNT16.CTRLA.reg |= TC_CTRLA_MODE_COUNT16;
-    // Set TC5 waveform generation mode to 'match frequency'
-    TC5->COUNT16.CTRLA.reg |= TC_CTRLA_WAVEGEN_MFRQ;
-    // set prescaler
-    // the clock normally counts at the GCLK_TC frequency, but we can set it to divide that frequency to slow it down
-    // you can use different prescaler divisons here like TC_CTRLA_PRESCALER_DIV1 to get a different range
-    TC5->COUNT16.CTRLA.reg |= TC_CTRLA_PRESCALER_DIV1024 | TC_CTRLA_ENABLE; // it will divide GCLK_TC frequency by 1024
-    // set the compare-capture register.
-    // The counter will count up to this value (it's a 16bit counter so we use uint16_t)
-    // this is how we fine-tune the frequency, make it count to a lower or higher value
-    // system clock should be 1MHz (8MHz/8) at Reset by default
-    TC5->COUNT16.CC[0].reg = (uint16_t)(SystemCoreClock / sampleRate);
-    while (tcIsSyncing())
-        ;
-
-    // Configure interrupt request
-    NVIC_DisableIRQ(TC5_IRQn);
-    NVIC_ClearPendingIRQ(TC5_IRQn);
-    NVIC_SetPriority(TC5_IRQn, 0);
-    NVIC_EnableIRQ(TC5_IRQn);
-
-    // Enable the TC5 interrupt request
-    TC5->COUNT16.INTENSET.bit.MC0 = 1;
-    while (tcIsSyncing())
-        ; // wait until TC5 is done syncing
-}
-
-// Function that is used to check if TC5 is done syncing
-// returns true when it is done syncing
-bool tcIsSyncing()
-{
-    return TC5->COUNT16.STATUS.reg & TC_STATUS_SYNCBUSY;
-}
-
-// This function enables TC5 and waits for it to be ready
-void tcStartCounter()
-{
-    TC5->COUNT16.CTRLA.reg |= TC_CTRLA_ENABLE; // set the CTRLA register
-    while (tcIsSyncing())
-        ; // wait until snyc'd
-}
-
-// Reset TC5
-void tcReset()
-{
-    TC5->COUNT16.CTRLA.reg = TC_CTRLA_SWRST;
-    while (tcIsSyncing())
-        ;
-    while (TC5->COUNT16.CTRLA.bit.SWRST)
-        ;
-}
-
-// disable TC5
-void tcDisable()
-{
-    TC5->COUNT16.CTRLA.reg &= ~TC_CTRLA_ENABLE;
-    while (tcIsSyncing())
-        ;
+    jump_start_flag = true;
 }
