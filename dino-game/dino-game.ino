@@ -1,5 +1,7 @@
 #include <LiquidCrystal.h>
+#include <LinkedList.h>
 #include "watchdog.h"
+#include "obstacles.h"
 
 byte arrows[8][8] = {{B00100, B01110, B11111, B00000, B00000, B00000, B00000, B00000},
   {B00000, B11111, B01110, B00100, B00000, B00000, B00000, B00000},
@@ -39,6 +41,12 @@ typedef enum
 playerState PLAYER_STATE = RUNNING;
 
 const int ledPin = 6;
+
+// Prints an error message and halts the system
+void error(String msg) {
+  Serial.println(msg);
+  while (true);
+}
 
 void setup()
 {
