@@ -1,6 +1,9 @@
 #include <LiquidCrystal.h>
 #include "watchdog.h"
 
+#define joyX A0
+#define joyY A1
+
 byte arrows[8][8] = {{B00100, B01110, B11111, B00000, B00000, B00000, B00000, B00000},
   {B00000, B11111, B01110, B00100, B00000, B00000, B00000, B00000},
   {B00100, B01100, B11100, B01100, B00100, B00000, B00000, B00000},
@@ -45,7 +48,8 @@ void setup()
   Serial.begin(9600);
   lcd.begin(16, 2);
   pinMode(buttonPin, INPUT);
-  attachInterrupt(digitalPinToInterrupt(buttonPin), jumpButtonPressInterrupt, RISING);
+  attachInterrupt(joyY, jumpUpInterrupt, RISING);
+  //attachInterrupt(joyY, jumpDownInterrupt, FALLING);
   tcConfigure(sampleRate); // configure the timer to run at <sampleRate>Hertz
   pinMode(ledPin, OUTPUT);
 }
@@ -144,7 +148,7 @@ playerState player_state_jumping()
   }
 }
 
-void jumpButtonPressInterrupt()
+void jumpUpInterrupt()
 {
   jump_start_flag = true;
 }
