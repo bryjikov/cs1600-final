@@ -31,6 +31,8 @@ playerState PLAYER_STATE = RUNNING;
 
 const int ledPin = 6;
 
+LinkedList<obstacle_t> *all_obstacles;
+
 // Prints an error message and halts the system
 void error(String msg) {
   Serial.println(msg);
@@ -45,6 +47,7 @@ void setup()
   attachInterrupt(digitalPinToInterrupt(buttonPin), jumpButtonPressInterrupt, RISING);
   tcConfigure(sampleRate); // configure the timer to run at <sampleRate>Hertz
   pinMode(ledPin, OUTPUT);
+  all_obstacles = new LinkedList<obstacle_t>();
 }
 
 /**
