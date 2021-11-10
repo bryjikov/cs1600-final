@@ -1,7 +1,7 @@
 /*
- * obstacles.ino
- * Functions for managing / updating obstacles.
- */
+   obstacles.ino
+   Functions for managing / updating obstacles.
+*/
 
 #define X_MIN 0
 #define X_MAX 19
@@ -58,11 +58,11 @@ void remove_out_of_bounds(LinkedList<obstacle_t> *obstacles)
   }
 }
 
-/**
- * Generates a new obstacle at a random Y position and
- * adds it to the given list of obstacles. The current
- * direction is indicated so that obstacles can be spawned.
- */
+/*
+   Generates a new obstacle at a random Y position and
+   adds it to the given list of obstacles. The current
+   direction is indicated so that obstacles can be spawned.
+*/
 void spawn_random_obstacle(LinkedList<obstacle_t> *obstacles, direction_t dir)
 {
   uint8_t y = rand() % (Y_MAX + 1);
@@ -84,4 +84,22 @@ void spawn_random_obstacle(LinkedList<obstacle_t> *obstacles, direction_t dir)
   // Add the new obstacle
   obstacle_t obs = { x, y };
   obstacles->add(obs);
+}
+
+/*
+   Determines if the player at the given coordinates is colliding with
+   any of the obstacles in the list.
+*/
+bool collision_detected(LinkedList<obstacle_t> *obstacles, uint8_t player_x, uint8_t player_y)
+{
+  obstacle_t obs;
+  for (int i = 0; i < obstacles->size(); i++) {
+    obs = obstacles->get(i);
+
+    if (obs.x == player_x && obs.y == player_y) {
+      return true;
+    }
+  }
+
+  return false;
 }

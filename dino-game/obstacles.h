@@ -1,7 +1,7 @@
 /*
- * obstacles.h
- * Types for managing obstacles.
- */
+   obstacles.h
+   Types for managing obstacles.
+*/
 
 // Represents an obstacle that moves across the screen.
 typedef struct {
@@ -14,7 +14,3 @@ typedef enum {
   LEFT,
   RIGHT
 } direction_t;
-
-void move_obstacles(LinkedList<obstacle_t> *obstacles, direction_t dir);
-void remove_out_of_bounds(LinkedList<obstacle_t> *obstacles);
-void spawn_random_obstacle(LinkedList<obstacle_t> *obstacles, direction_t dir);
