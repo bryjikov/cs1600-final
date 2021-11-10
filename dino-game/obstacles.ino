@@ -103,3 +103,13 @@ bool collision_detected(LinkedList<obstacle_t> *obstacles, uint8_t player_x, uin
 
   return false;
 }
+
+/*
+   Displays all objects in the given list to the LCD.
+*/
+void display_obstacles(LinkedList<obstacle_t> *obstacles)
+{
+  for (int i = 0; i < obstacles->size(); i++) {
+    display_obstacle(obstacles->get(i));
+  }
+}

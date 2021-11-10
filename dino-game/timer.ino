@@ -3,15 +3,33 @@
    Timer-related functionality.
 */
 
-/* JUMP HANDLER */
-void TC5_Handler(void)
+
+// Function that is used to check if TC5 is done syncing
+bool tcIsSyncing()
 {
-  tcDisable();
+  return TC5->COUNT16.STATUS.reg & TC_STATUS_SYNCBUSY;
+}
 
-  Serial.println("In TC5 handler!");
+// This function enables TC5 and waits for it to be ready
+void tcStartCounter()
+{
+  TC5->COUNT16.CTRLA.reg |= TC_CTRLA_ENABLE; // set the CTRLA register
+  while (tcIsSyncing()); // wait until snyc'd
+}
 
-  jump_end_flag = true;
-  TC5->COUNT16.INTFLAG.bit.MC0 = 1; // Writing a 1 to INTFLAG.bit.MC0 clears the interrupt so that it will run again
+// Reset TC5
+void tcReset()
+{
+  TC5->COUNT16.CTRLA.reg = TC_CTRLA_SWRST;
+  while (tcIsSyncing());
+  while (TC5->COUNT16.CTRLA.bit.SWRST);
+}
+
+// disable TC5
+void tcDisable()
+{
+  TC5->COUNT16.CTRLA.reg &= ~TC_CTRLA_ENABLE;
+  while (tcIsSyncing());
 }
 
 // Configures the TC to generate output events at the sample frequency.
@@ -44,30 +62,13 @@ void tcConfigure(int sampleRate)
   while (tcIsSyncing()); // wait until TC5 is done syncing
 }
 
-// Function that is used to check if TC5 is done syncing
-bool tcIsSyncing()
+/* JUMP HANDLER */
+void TC5_Handler(void)
 {
-  return TC5->COUNT16.STATUS.reg & TC_STATUS_SYNCBUSY;
-}
+  tcDisable();
 
-// This function enables TC5 and waits for it to be ready
-void tcStartCounter()
-{
-  TC5->COUNT16.CTRLA.reg |= TC_CTRLA_ENABLE; // set the CTRLA register
-  while (tcIsSyncing()); // wait until snyc'd
-}
+  Serial.println("In TC5 handler!");
 
-// Reset TC5
-void tcReset()
-{
-  TC5->COUNT16.CTRLA.reg = TC_CTRLA_SWRST;
-  while (tcIsSyncing());
-  while (TC5->COUNT16.CTRLA.bit.SWRST);
-}
-
-// disable TC5
-void tcDisable()
-{
-  TC5->COUNT16.CTRLA.reg &= ~TC_CTRLA_ENABLE;
-  while (tcIsSyncing());
+  jump_end_flag = true;
+  TC5->COUNT16.INTFLAG.bit.MC0 = 1; // Writing a 1 to INTFLAG.bit.MC0 clears the interrupt so that it will run again
 }

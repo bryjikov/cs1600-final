@@ -7,7 +7,7 @@
    Create a watchdog timer that is set to reset the system
    after 4 seconds without being reset.
 */
-void setup_watchdog()
+void setup_watchdog(void)
 {
   // Clear and enable WDT
   NVIC_DisableIRQ(WDT_IRQn);
@@ -49,7 +49,7 @@ void pet_watchdog(void)
 
    TODO: do we actually need to use this?
 */
-void WDT_Handler()
+void WDT_Handler(void)
 {
   // Clear interrupt register flag
   // (reference register with WDT->register_name.reg)
