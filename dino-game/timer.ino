@@ -3,21 +3,102 @@
    Timer-related functionality.
 */
 
+unsigned long driver_counter = 0;
 
-// Function that is used to check if TC5 is done syncing
+/*
+   Calls the handler for any jobs whose interval multiples divide
+   the current driver counter.
+*/
+void invoke_driver(void)
+{
+  job_t job;
+  for (int i = 0; i < all_jobs->size(); i++) {
+    job = all_jobs->get(i);
+
+    if (driver_counter % job.interval_multiple == 0) {
+      job.handler();
+    }
+  }
+
+  // FIXME: I'm pretty sure this approach won't work once driver_counter overflows.
+  // However, millis() (an unsigned long) overflows after 50 days, so we could just make
+  // the assumption that this *never* overflows while you're playing the game.
+  //
+  // If we knew all the interval multiples statically, we could manually reset this to 0
+  // just before it hits the LCM of all the interval multiples. However, because the obstacle
+  // move interval changes as the game progresses, this is impossible.
+  driver_counter++;
+}
+
+/*
+   Adds a job to the global list of jobs.
+
+   TODO: does it make more sense to configure a job with a millisecond interval
+   instead of a multiple of the driver interval? Then we can compute/check the multiple.
+*/
+void register_job(job_id_t id, void (*handler)(void), size_t interval_multiple)
+{
+  job_t job = {
+    id,
+    handler,
+    interval_multiple
+  };
+  all_jobs->add(job);
+}
+
+/*
+   Retrive a job from the global jobs list by its id.
+*/
+job_t get_job(job_id_t id)
+{
+  job_t job;
+  for (int i = 0; i < all_jobs->size(); i++) {
+    job = all_jobs->get(i);
+
+    if (job.id == id) {
+      return job;
+    }
+  }
+
+  error("tried to get invalid job");
+}
+
+/*
+   Updates the interval multiple of a job in the global all_jobs list.
+   (useful for changing the obstacle move interval)
+*/
+void update_interval_multiple(job_id_t id, size_t new_interval_multiple)
+{
+  job_t job;
+  for (int i = 0; i < all_jobs->size(); i++) {
+    job = all_jobs->get(i);
+
+    if (job.id == id) {
+      job.interval_multiple = new_interval_multiple;
+      all_jobs->set(i, job);
+      return;
+    }
+  }
+
+  error("tried to update interval multiple of invalid job");
+}
+
+/*
+   Checks if TC5 is done syncing.
+*/
 bool tcIsSyncing()
 {
   return TC5->COUNT16.STATUS.reg & TC_STATUS_SYNCBUSY;
 }
-
-// This function enables TC5 and waits for it to be ready
+/*
+   This function enables TC5 and waits for it to be ready
+*/
 void tcStartCounter()
 {
   TC5->COUNT16.CTRLA.reg |= TC_CTRLA_ENABLE; // set the CTRLA register
   while (tcIsSyncing()); // wait until snyc'd
 }
 
-// Reset TC5
 void tcReset()
 {
   TC5->COUNT16.CTRLA.reg = TC_CTRLA_SWRST;
@@ -25,14 +106,15 @@ void tcReset()
   while (TC5->COUNT16.CTRLA.bit.SWRST);
 }
 
-// disable TC5
 void tcDisable()
 {
   TC5->COUNT16.CTRLA.reg &= ~TC_CTRLA_ENABLE;
   while (tcIsSyncing());
 }
 
-// Configures the TC to generate output events at the sample frequency.
+/*
+   Configures the TC to generate output events at the sample frequency.
+*/
 void tcConfigure(int sampleRate)
 {
   // select the generic clock generator used as source to the generic clock multiplexer
@@ -62,13 +144,16 @@ void tcConfigure(int sampleRate)
   while (tcIsSyncing()); // wait until TC5 is done syncing
 }
 
-/* JUMP HANDLER */
+/*
+   Handler for the TC5 timer, which we are using to invoke the driver
+   at a regular interval. The driver then invokes other timed jobs as necessary.
+*/
 void TC5_Handler(void)
 {
   tcDisable();
 
-  Serial.println("In TC5 handler!");
+  Serial.println("Invoking timer driver!");
+  invoke_driver();
 
-  jump_end_flag = true;
   TC5->COUNT16.INTFLAG.bit.MC0 = 1; // Writing a 1 to INTFLAG.bit.MC0 clears the interrupt so that it will run again
 }

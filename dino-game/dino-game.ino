@@ -1,6 +1,7 @@
 #include <LiquidCrystal.h>
 #include <LinkedList.h>
 #include "obstacles.h"
+#include "timer.h"
 
 #define joyX A0
 #define joyY A1
@@ -9,7 +10,6 @@ const int rs = 0, en = 1, d4 = 2, d5 = 3, d6 = 4, d7 = 5;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 const int buttonPin = 8;
 int positionY = 3;
-uint32_t sampleRate = 1000; // sample rate in milliseconds, determines how often TC5_Handler is called
 
 #define PWM_MIN 0
 #define PWM_MAX 255
@@ -35,6 +35,7 @@ playerState PLAYER_STATE = RUNNING;
 const int ledPin = 6;
 
 LinkedList<obstacle_t> *all_obstacles;
+LinkedList<job_t> *all_jobs;
 
 // Prints an error message and halts the system
 void error(String msg) {
@@ -42,16 +43,39 @@ void error(String msg) {
   while (true);
 }
 
+void obstacle_move_handler(void)
+{
+  // TODO: assume for now we're just moving left (this will depend on FSM)
+  move_obstacles(all_obstacles, LEFT);
+}
+
+void obstacle_speed_up_handler(void)
+{
+  job_t job = get_job(MOVE_OBSTACLES);
+  // Subtracting 1 is 50ms less because this is in terms of the DRIVER_INTERVAL (which is 50ms)
+  update_interval_multiple(MOVE_OBSTACLES, job.interval_multiple - 1);
+}
+
 void setup()
 {
   Serial.begin(9600);
   lcd.begin(16, 2);
   pinMode(buttonPin, INPUT);
+  pinMode(ledPin, OUTPUT);
   attachInterrupt(joyY, jumpUpInterrupt, RISING);
   //attachInterrupt(joyY, jumpDownInterrupt, FALLING);
-  tcConfigure(sampleRate); // configure the timer to run at <sampleRate>Hertz
-  pinMode(ledPin, OUTPUT);
+
+  // Configure the timer driver to run every DRIVER_INTERVAL ms
+  tcConfigure(DRIVER_INTERVAL);
+
   all_obstacles = new LinkedList<obstacle_t>();
+  all_jobs = new LinkedList<job_t>();
+
+  // EXAMPLE: move obstacles every 250ms (5 * DRIVER_INTERVAL)
+  register_job(MOVE_OBSTACLES, &obstacle_move_handler, 5);
+
+  // EXAMPLE: speed up obstacle movement by 50ms every 1000ms (20 * DRIVER_INTERVAL)
+  register_job(SPEED_UP_OBSTACLES, &obstacle_speed_up_handler, 20);
 }
 
 /**
