@@ -43,7 +43,7 @@ void display_player(byte x, byte y)
 
   // FIXME: not sure if this will work
   lcd.createChar(0, person);
-  lcd.setCursor(x, y / 2);
+//  lcd.setCursor(x, y / 2);
   lcd.write(byte(0));
 }
 

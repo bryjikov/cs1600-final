@@ -99,6 +99,7 @@ bool tcIsSyncing()
 {
   return TC5->COUNT16.STATUS.reg & TC_STATUS_SYNCBUSY;
 }
+
 /*
    This function enables TC5 and waits for it to be ready
 */
