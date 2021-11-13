@@ -16,6 +16,11 @@ void invoke_driver(void)
     job = all_jobs->get(i);
 
     if (driver_counter % job.interval_multiple == 0) {
+      Serial.print("Invoking job ");
+      Serial.print(job.id);
+      Serial.print("at millis: ");
+      Serial.println(millis());
+
       job.handler();
     }
   }
@@ -156,7 +161,8 @@ void TC5_Handler(void)
 {
   tcDisable();
 
-  Serial.println("Invoking timer driver!");
+  Serial.print("Invoking timer driver at millis ");
+  Serial.println(millis());
   invoke_driver();
 
   TC5->COUNT16.INTFLAG.bit.MC0 = 1; // Writing a 1 to INTFLAG.bit.MC0 clears the interrupt so that it will run again

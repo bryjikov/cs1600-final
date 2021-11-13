@@ -48,6 +48,8 @@ void obstacle_move_handler(void)
 {
   // TODO: assume for now we're just moving left (this will depend on FSM)
   move_obstacles(all_obstacles, LEFT);
+
+  // TODO: this is also where we could spawn new obstacles / remove out of bounds ones
 }
 
 void obstacle_speed_up_handler(void)
