@@ -48,9 +48,10 @@ void setup()
   Serial.begin(9600);
   lcd.begin(16, 2);
   pinMode(buttonPin, INPUT);
-  attachInterrupt(joyY, jumpUpInterrupt, RISING);
-  //attachInterrupt(joyY, jumpDownInterrupt, FALLING);
-  tcConfigure(sampleRate); // configure the timer to run at <sampleRate>Hertz
+  attachInterrupt(joyY, jumpChangeInterrupt, FALLING);
+  //attachInterrupt(joyY, jumpUpInterrupt, RISING);
+  //attachInterrupt(joyX, jumpDownInterrupt, RISING);
+  //tcConfigure(sampleRate); // configure the timer to run at <sampleRate>Hertz
   pinMode(ledPin, OUTPUT);
 }
 
@@ -126,8 +127,9 @@ playerState player_state_running()
   if (jump_start_flag)
   {
     positionY = 2;
-    tcStartCounter();
+    //tcStartCounter();
     jump_start_flag = false;
+    //Serial.println("jump_start_flag was true");
     return JUMPING;
   }
   else {
@@ -141,6 +143,7 @@ playerState player_state_jumping()
   {
     positionY = 3;
     jump_end_flag = false;
+    //Serial.println("jump_end_flag was true");
     return RUNNING;
   }
   else {
@@ -148,7 +151,28 @@ playerState player_state_jumping()
   }
 }
 
+void jumpChangeInterrupt() {
+  //Serial.println("In change");
+  int yVal = analogRead(joyY);
+  //Serial.print("yval:");
+  //Serial.println(yVal);
+  if (yVal < 10) {
+    //Serial.println("yVal < 10");
+    jump_start_flag = true;
+  }
+  if (yVal > 1013) {
+    //Serial.println("yVal > 1013");
+    jump_end_flag = true;
+  }
+}
+
 void jumpUpInterrupt()
 {
+  //Serial.println("jumping");
   jump_start_flag = true;
+}
+
+void jumpDownInterrupt()
+{
+  jump_end_flag = true;
 }
