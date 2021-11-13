@@ -31,13 +31,17 @@ void invoke_driver(void)
 }
 
 /*
-   Adds a job to the global list of jobs.
-
-   TODO: does it make more sense to configure a job with a millisecond interval
-   instead of a multiple of the driver interval? Then we can compute/check the multiple.
+   Adds a job to the global list of jobs, given how often it should run
+   (every interval milliseconds)
 */
-void register_job(job_id_t id, void (*handler)(void), size_t interval_multiple)
+void register_job(job_id_t id, void (*handler)(void), size_t interval)
 {
+  if (interval % DRIVER_INTERVAL != 0) {
+    error("register_job: invalid interval for job");
+  }
+
+  size_t interval_multiple = interval / DRIVER_INTERVAL;
+
   job_t job = {
     id,
     handler,

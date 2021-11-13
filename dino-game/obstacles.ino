@@ -3,11 +3,6 @@
    Functions for managing / updating obstacles.
 */
 
-#define X_MIN 0
-#define X_MAX 19
-#define Y_MIN 0
-#define Y_MAX 3
-
 /*
    Moves each obstacle in a list 1 unit in the indicated direction.
 */
@@ -45,7 +40,7 @@ void remove_out_of_bounds(LinkedList<obstacle_t> *obstacles)
     obs = obstacles->get(i);
 
     // Only keep obstacles within bounds
-    if (obs.x >= X_MIN && obs.x <= X_MAX && obs.y >= Y_MIN && obs.y <= Y_MAX)
+    if (obs.x >= LCD_X_MIN && obs.x <= LCD_X_MAX && obs.y >= LCD_Y_MIN && obs.y <= LCD_Y_MAX)
     {
       only_in_bounds.add(obs);
     }
@@ -65,17 +60,17 @@ void remove_out_of_bounds(LinkedList<obstacle_t> *obstacles)
 */
 void spawn_random_obstacle(LinkedList<obstacle_t> *obstacles, direction_t dir)
 {
-  uint8_t y = rand() % (Y_MAX + 1);
+  uint8_t y = rand() % (LCD_Y_MAX + 1);
   uint8_t x;
 
-  // If obstacles are moving left, spawn on the right (X_MAX)
-  // If obstacles are moving right, spawn on the left (X_MIN)
+  // If obstacles are moving left, spawn on the right (LCD_X_MAX)
+  // If obstacles are moving right, spawn on the left (LCD_X_MIN)
   switch (dir) {
     case LEFT:
-      x = X_MAX;
+      x = LCD_X_MAX;
       break;
     case RIGHT:
-      x = X_MIN;
+      x = LCD_X_MIN;
       break;
     default:
       error("invalid direction in spawn_random_obstacle");

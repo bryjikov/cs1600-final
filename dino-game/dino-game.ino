@@ -2,6 +2,7 @@
 #include <LinkedList.h>
 #include "obstacles.h"
 #include "timer.h"
+#include "display.h"
 
 #define joyX A0
 #define joyY A1
@@ -71,11 +72,11 @@ void setup()
   all_obstacles = new LinkedList<obstacle_t>();
   all_jobs = new LinkedList<job_t>();
 
-  // EXAMPLE: move obstacles every 250ms (5 * DRIVER_INTERVAL)
-  register_job(MOVE_OBSTACLES, &obstacle_move_handler, 5);
+  // EXAMPLE: move obstacles every 250ms
+  register_job(MOVE_OBSTACLES, &obstacle_move_handler, 250);
 
-  // EXAMPLE: speed up obstacle movement by 50ms every 1000ms (20 * DRIVER_INTERVAL)
-  register_job(SPEED_UP_OBSTACLES, &obstacle_speed_up_handler, 20);
+  // EXAMPLE: speed up obstacle movement by 50ms every 1000ms
+  register_job(SPEED_UP_OBSTACLES, &obstacle_speed_up_handler, 1000);
 }
 
 /**
