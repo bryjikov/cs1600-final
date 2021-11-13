@@ -3,6 +3,10 @@
 
 #define joyX A0
 #define joyY A1
+int joystickPosX = 0;
+int joystickPosY = 0;
+int joystickPrevPosX = 0;
+int joystickPrevPosY = 0;
 
 byte arrows[8][8] = {{B00100, B01110, B11111, B00000, B00000, B00000, B00000, B00000},
   {B00000, B11111, B01110, B00100, B00000, B00000, B00000, B00000},
@@ -91,10 +95,26 @@ void updateLED(void)
 
 void loop()
 {
-    WDT->CLEAR.reg = WDT_CLEAR_CLEAR(165);
-    update_player_state(millis());
-    display_cursor(8, positionY);
-    updateLED();
+  WDT->CLEAR.reg = WDT_CLEAR_CLEAR(165);
+  update_joystick();
+  update_joystick();
+  pet_watchdog();
+  update_player_state(millis());
+  display_player(8, positionY);
+  updateLED();
+}
+
+void update_joystick() {
+  int xValue = analogRead(joyX);
+  int yValue = analogRead(joyY);
+  // map the joysticks value (0, 1023) to (-1, 1) where it is only 0 if at center position (511)
+  joystickPosX = xValue = 511 ? 0 : xValue > 511 ? 1 : -1;
+  joystickPosY = yValue = 511 ? 0 : yValue > 511 ? 1 : -1;
+  if(joystickPosX != joystickPrevPosX || joystickPrevPosY != joystickPrevPosY) {
+    /* joystick position changed */
+  }
+  joystickPrevPosX = joystickPosX;
+  joystickPrevPosY = joystickPosY;
 }
 
 void update_player_state(long mils)
