@@ -12,7 +12,9 @@ int joystickPrevPosY = 0;
 const int rs = 0, en = 1, d4 = 2, d5 = 3, d6 = 4, d7 = 5;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 const int buttonPin = 8;
-int positionY = 3;
+int minY = 0;
+int maxY = 1;
+int positionY = 1;
 uint32_t sampleRate = 1000; // sample rate in milliseconds, determines how often TC5_Handler is called
 
 #define PWM_MIN 0
@@ -93,15 +95,21 @@ void loop()
 void update_joystick() {
   int xValue = analogRead(joyX);
   int yValue = analogRead(joyY);
-  // map the joysticks value (0, 1023) to (-1, 1) where it is only 0 if at center position (511)
-  joystickPosX = xValue = 511 ? 0 : xValue > 511 ? 1 : -1;
-  joystickPosY = yValue = 511 ? 0 : yValue > 511 ? 1 : -1;
+  // map the joysticks value (0, 1023) to (-1, 1) where it is only 0 if at center position (500, 515)
+  joystickPosX = xValue >= 500 && xValue <= 515 ? 0 : xValue > 515 ? 1 : -1;
+  joystickPosY = yValue >= 500 && yValue <= 515 ? 0 : yValue > 515 ? 1 : -1;
   if(joystickPosX != joystickPrevPosX || joystickPrevPosY != joystickPrevPosY) {
-    /* joystick position changed */
+    joystick_position_changed();
   }
   joystickPrevPosX = joystickPosX;
   joystickPrevPosY = joystickPosY;
+}
 
+void joystick_position_changed() {
+  positionY = constrain(positionY + joystickPosY, minY, maxY);
+  Serial.println(joystickPosX);
+  Serial.println(joystickPosY);
+}
 
 void update_player_state(long mils)
 {
