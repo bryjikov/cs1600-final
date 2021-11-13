@@ -3,6 +3,8 @@
    Timer-related functionality.
 */
 
+// TODO: Free the jobs at some point.
+
 unsigned long driver_counter = 0;
 
 /*
@@ -11,17 +13,17 @@ unsigned long driver_counter = 0;
 */
 void invoke_driver(void)
 {
-  job_t job;
+  job_t *job;
   for (int i = 0; i < all_jobs->size(); i++) {
     job = all_jobs->get(i);
 
-    if (driver_counter % job.interval_multiple == 0) {
+    if (driver_counter % job->interval_multiple == 0) {
       Serial.print("Invoking job ");
-      Serial.print(job.id);
+      Serial.print(job->id);
       Serial.print("at millis: ");
       Serial.println(millis());
 
-      job.handler();
+      job->handler();
     }
   }
 
@@ -47,24 +49,23 @@ void register_job(job_id_t id, void (*handler)(void), size_t interval)
 
   size_t interval_multiple = interval / DRIVER_INTERVAL;
 
-  job_t job = {
-    id,
-    handler,
-    interval_multiple
-  };
+  job_t *job = (job_t *)malloc(sizeof(job_t));
+  job->id = id;
+  job->handler = handler;
+  job->interval_multiple = interval_multiple;
   all_jobs->add(job);
 }
 
 /*
    Retrive a job from the global jobs list by its id.
 */
-job_t get_job(job_id_t id)
+job_t *get_job(job_id_t id)
 {
-  job_t job;
+  job_t *job;
   for (int i = 0; i < all_jobs->size(); i++) {
     job = all_jobs->get(i);
 
-    if (job.id == id) {
+    if (job->id == id) {
       return job;
     }
   }
@@ -78,13 +79,13 @@ job_t get_job(job_id_t id)
 */
 void update_interval_multiple(job_id_t id, size_t new_interval_multiple)
 {
-  job_t job;
+  job_t *job;
   for (int i = 0; i < all_jobs->size(); i++) {
     job = all_jobs->get(i);
 
-    if (job.id == id) {
-      job.interval_multiple = new_interval_multiple;
-      all_jobs->set(i, job);
+    if (job->id == id) {
+      job->interval_multiple = new_interval_multiple;
+//      all_jobs->set(i, job);
       return;
     }
   }

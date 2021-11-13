@@ -1,5 +1,5 @@
 #include <LiquidCrystal.h>
-#include <LinkedList.h>
+#include <LinkedPointerList.h>
 #include "obstacles.h"
 #include "timer.h"
 #include "display.h"
@@ -35,8 +35,8 @@ playerState PLAYER_STATE = RUNNING;
 
 const int ledPin = 6;
 
-LinkedList<obstacle_t> *all_obstacles;
-LinkedList<job_t> *all_jobs;
+LinkedPointerList<obstacle_t> *all_obstacles;
+LinkedPointerList<job_t> *all_jobs;
 
 // Prints an error message and halts the system
 void error(String msg) {
@@ -54,14 +54,15 @@ void obstacle_move_handler(void)
 
 void obstacle_speed_up_handler(void)
 {
-  job_t job = get_job(MOVE_OBSTACLES);
+  job_t *job = get_job(MOVE_OBSTACLES);
   // Subtracting 1 is 50ms less because this is in terms of the DRIVER_INTERVAL (which is 50ms)
-  update_interval_multiple(MOVE_OBSTACLES, job.interval_multiple - 1);
+  update_interval_multiple(MOVE_OBSTACLES, job->interval_multiple - 1);
 }
 
 void setup()
 {
   Serial.begin(9600);
+  lcd.createChar(0, person);
   lcd.begin(16, 2);
   pinMode(buttonPin, INPUT);
   pinMode(ledPin, OUTPUT);
@@ -71,8 +72,10 @@ void setup()
   // Configure the timer driver to run every DRIVER_INTERVAL ms
   tcConfigure(DRIVER_INTERVAL);
 
-  all_obstacles = new LinkedList<obstacle_t>();
-  all_jobs = new LinkedList<job_t>();
+  all_obstacles = new LinkedPointerList<obstacle_t>();
+  all_jobs = new LinkedPointerList<job_t>();
+
+  spawn_random_obstacle(all_obstacles, LEFT);
 
   // EXAMPLE: move obstacles every 250ms
   register_job(MOVE_OBSTACLES, &obstacle_move_handler, 250);
@@ -105,7 +108,7 @@ void updateLED(void)
 
 void loop()
 {
-  pet_watchdog();
+  //pet_watchdog();
   update_player_state(millis());
   display_player(8, positionY);
   updateLED();
