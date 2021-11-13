@@ -1,6 +1,6 @@
 #include <LiquidCrystal.h>
-#include <LinkedList.h>
 #include "obstacles.h"
+#include "display.h"
 
 #define joyX A0
 #define joyY A1
@@ -34,7 +34,9 @@ playerState PLAYER_STATE = RUNNING;
 
 const int ledPin = 6;
 
-LinkedList<obstacle_t> *all_obstacles;
+obstacle_t o;
+
+//LinkedList<obstacle_t> *all_obstacles;
 
 // Prints an error message and halts the system
 void error(String msg) {
@@ -45,13 +47,15 @@ void error(String msg) {
 void setup()
 {
   Serial.begin(9600);
+  lcd.createChar(0, person);
   lcd.begin(16, 2);
   pinMode(buttonPin, INPUT);
-  attachInterrupt(joyY, jumpUpInterrupt, RISING);
+  //attachInterrupt(joyY, jumpUpInterrupt, RISING);
   //attachInterrupt(joyY, jumpDownInterrupt, FALLING);
   tcConfigure(sampleRate); // configure the timer to run at <sampleRate>Hertz
   pinMode(ledPin, OUTPUT);
-  all_obstacles = new LinkedList<obstacle_t>();
+  o = {15, 1};
+  //all_obstacles = new LinkedList<obstacle_t>();
 }
 
 /**
@@ -78,9 +82,10 @@ void updateLED(void)
 
 void loop()
 {
-  pet_watchdog();
+  //pet_watchdog();
   update_player_state(millis());
   display_player(8, positionY);
+  display_obstacle(o);
   updateLED();
 }
 
