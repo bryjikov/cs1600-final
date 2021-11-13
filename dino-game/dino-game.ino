@@ -1,5 +1,6 @@
 #include <LiquidCrystal.h>
-#include "watchdog.h"
+#include <LinkedList.h>
+#include "obstacles.h"
 
 #define joyX A0
 #define joyY A1
@@ -7,16 +8,6 @@ int joystickPosX = 0;
 int joystickPosY = 0;
 int joystickPrevPosX = 0;
 int joystickPrevPosY = 0;
-
-byte arrows[8][8] = {{B00100, B01110, B11111, B00000, B00000, B00000, B00000, B00000},
-  {B00000, B11111, B01110, B00100, B00000, B00000, B00000, B00000},
-  {B00100, B01100, B11100, B01100, B00100, B00000, B00000, B00000},
-  {B00100, B00110, B00111, B00110, B00100, B00000, B00000, B00000},
-  {B00000, B00000, B00000, B00000, B00100, B01110, B11111, B00000},
-  {B00000, B00000, B00000, B00000, B00000, B11111, B01110, B00100},
-  {B00000, B00000, B00000, B00100, B01100, B11100, B01100, B00100},
-  {B00000, B00000, B00000, B00100, B00110, B00111, B00110, B00100}
-};
 
 const int rs = 0, en = 1, d4 = 2, d5 = 3, d6 = 4, d7 = 5;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
@@ -47,6 +38,14 @@ playerState PLAYER_STATE = RUNNING;
 
 const int ledPin = 6;
 
+LinkedList<obstacle_t> *all_obstacles;
+
+// Prints an error message and halts the system
+void error(String msg) {
+  Serial.println(msg);
+  while (true);
+}
+
 void setup()
 {
   Serial.begin(9600);
@@ -57,18 +56,7 @@ void setup()
   //attachInterrupt(joyX, jumpDownInterrupt, RISING);
   //tcConfigure(sampleRate); // configure the timer to run at <sampleRate>Hertz
   pinMode(ledPin, OUTPUT);
-}
-
-void display_cursor(byte x, byte y)
-{
-  // A hack, because enum "orientation" defines values from 0 to 3 and we defined arrow indexing in this way
-  // we are converting LCD y-coordinates (0 and 1) to game y-coordinates (0, 1, 2, and 3)
-  int arrow_ind = 4 * (y % 2);
-  // only 8 custom characters are allowed to be stored at once, so we have to swap them out sometimes
-  lcd.createChar(arrow_ind, arrows[arrow_ind]);
-  lcd.clear();
-  lcd.setCursor(x, y / 2);
-  lcd.write(byte(arrow_ind));
+  all_obstacles = new LinkedList<obstacle_t>();
 }
 
 /**
@@ -95,8 +83,6 @@ void updateLED(void)
 
 void loop()
 {
-  WDT->CLEAR.reg = WDT_CLEAR_CLEAR(165);
-  update_joystick();
   update_joystick();
   pet_watchdog();
   update_player_state(millis());
@@ -115,7 +101,7 @@ void update_joystick() {
   }
   joystickPrevPosX = joystickPosX;
   joystickPrevPosY = joystickPosY;
-}
+
 
 void update_player_state(long mils)
 {
