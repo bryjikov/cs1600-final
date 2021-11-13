@@ -10,7 +10,7 @@
 const int rs = 0, en = 1, d4 = 2, d5 = 3, d6 = 4, d7 = 5;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 const int buttonPin = 8;
-int positionY = 3;
+int positionY = 1;
 
 #define PWM_MIN 0
 #define PWM_MAX 255
@@ -62,6 +62,7 @@ void obstacle_speed_up_handler(void)
 void setup()
 {
   Serial.begin(9600);
+  while (!Serial);
   lcd.createChar(0, person);
   lcd.begin(16, 2);
   pinMode(buttonPin, INPUT);
@@ -75,7 +76,10 @@ void setup()
   all_obstacles = new LinkedPointerList<obstacle_t>();
   all_jobs = new LinkedPointerList<job_t>();
 
-  spawn_random_obstacle(all_obstacles, LEFT);
+//  spawn_random_obstacle(all_obstacles, LEFT);
+
+  obstacle_t obs = { 10, 1 };
+  all_obstacles->add(&obs);
 
   // EXAMPLE: move obstacles every 250ms
   register_job(MOVE_OBSTACLES, &obstacle_move_handler, 250);
@@ -110,7 +114,8 @@ void loop()
 {
   //pet_watchdog();
   update_player_state(millis());
-  display_player(8, positionY);
+  display_player(8, 1);
+//  display_obstacles(all_obstacles);
   updateLED();
 }
 

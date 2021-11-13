@@ -20,7 +20,7 @@ void invoke_driver(void)
     if (driver_counter % job->interval_multiple == 0) {
       Serial.print("Invoking job ");
       Serial.print(job->id);
-      Serial.print("at millis: ");
+      Serial.print(" at millis: ");
       Serial.println(millis());
 
       job->handler();
@@ -161,7 +161,7 @@ void tcConfigure(int sampleRate)
 */
 void TC5_Handler(void)
 {
-  tcDisable();
+//  tcDisable();
 
   Serial.print("Invoking timer driver at millis ");
   Serial.println(millis());
