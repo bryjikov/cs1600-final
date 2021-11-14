@@ -14,3 +14,6 @@ typedef enum {
   LEFT,
   RIGHT
 } direction_t;
+
+// Global list containing all currently active obstacles.
+LinkedPointerList<obstacle_t> *all_obstacles;
