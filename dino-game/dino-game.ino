@@ -21,22 +21,29 @@ char SERIAL_PRINTF_BUF[SERIAL_PRINTF_BUF_SIZE];
 const int rs = 0, en = 1, d4 = 2, d5 = 3, d6 = 4, d7 = 5;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 const int buttonPin = 8;
-int positionY = 1;
 
-/* FLAGS */
-volatile bool jump_start_flag = false;
-volatile bool jump_end_flag = false;
-/* FLAGS */
+int player_y = 1;
+
+/* FSM Variables */
+volatile bool game_over_flag = false;             /* Set when the player has collided with an obstacle */
+volatile bool pre_direction_change_flag = false;  /* Set when a direction change is upcoming and user should be warned */
+volatile unsigned long time_entered_pdc;          /* Time (millis()) at which the pre direction change state was entered */
+volatile bool restart_flag = false;               /* Set when the game should start over */
+volatile direction_t obstacle_direction = LEFT;   /* Direction of movement for obstacles */
 
 typedef enum
 {
-  INACTIVE = 0,
-  RUNNING = 1,
-  JUMPING = 2,
-  /* .. continue ... */
-} playerState;
+  /* All FSM variables should be initialized */
+  SETUP,
+  /* Normal gameplay, obstacles are moving and player is responding. */
+  NORMAL,
+  /* Temporary period during which LED pulsates to warn of an upcoming direction change. */
+  PRE_DIRECTION_CHANGE,
+  /* Player has collided with obstacle, game is over. */
+  GAME_OVER,
+} state_t;
 
-playerState PLAYER_STATE = RUNNING;
+state_t current_state = SETUP;
 
 // Prints an error message and halts the system
 void error(String msg) {
@@ -69,11 +76,10 @@ void setup()
   while (!Serial);
 
   initialize_lcd();
+  initialize_fsm();
 
   pinMode(buttonPin, INPUT);
   pinMode(LED_PIN, OUTPUT);
-  attachInterrupt(joyY, jumpUpInterrupt, RISING);
-  //attachInterrupt(joyY, jumpDownInterrupt, FALLING);
 
   // Configure the timer driver to run every DRIVER_INTERVAL ms
   tcConfigure(DRIVER_INTERVAL);
@@ -88,65 +94,71 @@ void setup()
 void loop()
 {
   //pet_watchdog();
-  update_player_state(millis());
+  current_state = update_game_state(millis());
   display_player(8, 1);
   //display_obstacles(all_obstacles);
   updateLED();
 }
 
-void update_player_state(long mils)
+/*
+   Sets all FSM variables back to their initial states.
+*/
+void initialize_fsm(void) {
+  game_over_flag = false;
+  pre_direction_change_flag = false;
+  time_entered_pdc = 0;
+  restart_flag = false;
+  player_y = 1;
+  obstacle_direction = LEFT;
+}
+
+/*
+   Updates the FSM, given the current time in milliseconds.
+
+   TODO: label all transitions according to an FSM diagram, which we 
+   also need to update.
+*/
+state_t update_game_state(long mils)
 {
-  playerState NEXT_STATE = PLAYER_STATE;
-  switch (PLAYER_STATE)
-  {
-    case INACTIVE:
-      NEXT_STATE = player_state_inactive();
+  // By default, remain in the current state
+  state_t next_state = current_state;
+
+  switch (current_state) {
+    case SETUP:
+      initialize_fsm();
+      next_state = NORMAL;
       break;
-    case RUNNING:
-      NEXT_STATE = player_state_running();
+
+    case GAME_OVER:
+      if (restart_flag) {
+        next_state = SETUP;
+        restart_flag = false;
+      }
       break;
-    case JUMPING:
-      NEXT_STATE = player_state_jumping();
+
+    case NORMAL:
+      if (game_over_flag) {
+        next_state = GAME_OVER;
+        game_over_flag = false;
+      } else if (pre_direction_change_flag) {
+        next_state = PRE_DIRECTION_CHANGE;
+        pre_direction_change_flag = false;
+      }
       break;
+
+    case PRE_DIRECTION_CHANGE:
+      // If it has been long enough since the pre direction change state was
+      // entered, flip the direction of obstacle movement and transition to NORMAL.
+      if (mils - time_entered_pdc >= 2000) {
+        obstacle_direction = invert_direction(obstacle_direction);
+        next_state = NORMAL;
+      }
+      break;
+
     default:
+      error("invalid state in update_game_state");
       break;
   }
-  PLAYER_STATE = NEXT_STATE;
-}
 
-playerState player_state_inactive()
-{
-  return INACTIVE;
-}
-
-playerState player_state_running()
-{
-  if (jump_start_flag)
-  {
-    positionY = 2;
-    tcStartCounter();
-    jump_start_flag = false;
-    return JUMPING;
-  }
-  else {
-    return RUNNING;
-  }
-}
-
-playerState player_state_jumping()
-{
-  if (jump_end_flag)
-  {
-    positionY = 3;
-    jump_end_flag = false;
-    return RUNNING;
-  }
-  else {
-    return JUMPING;
-  }
-}
-
-void jumpUpInterrupt()
-{
-  jump_start_flag = true;
+  return next_state;
 }

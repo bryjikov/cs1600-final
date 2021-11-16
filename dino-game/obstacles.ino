@@ -4,6 +4,21 @@
 */
 
 /*
+ * Produces the opposite of the given direction.
+ */
+direction_t invert_direction(direction_t dir)
+{
+  switch (dir) {
+    case LEFT:
+      return RIGHT;
+    case RIGHT:
+      return LEFT;
+    default:
+      error("invert_direction: invalid direction");
+  }
+}
+
+/*
    Moves each obstacle in a list 1 unit in the indicated direction.
 */
 void move_obstacles(LinkedPointerList<obstacle_t> *obstacles, direction_t dir)
