@@ -21,6 +21,8 @@ int joystickPosX = 0;
 int joystickPosY = 0;
 int joystickPrevPosX = 0;
 int joystickPrevPosY = 0;
+int joystickInitialPosX = 0;
+int joystickInitialPosY = 0;
 
 const int rs = 0, en = 1, d4 = 2, d5 = 3, d6 = 4, d7 = 5;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
@@ -88,6 +90,8 @@ void setup()
   attachInterrupt(joyY, jumpUpInterrupt, RISING);
   //attachInterrupt(joyY, jumpDownInterrupt, FALLING);
 
+  //setup_watchdog();
+
   // Configure the timer driver to run every DRIVER_INTERVAL ms
   tcConfigure(DRIVER_INTERVAL);
 
@@ -96,6 +100,9 @@ void setup()
 
   register_job(MOVE_OBSTACLES, &obstacle_move_handler, 250);
   register_job(SPEED_UP_OBSTACLES, &obstacle_speed_up_handler, 1000);
+
+  joystickInitialPosX = analogRead(joyX);
+  joystickInitialPosY = analogRead(joyY);
 }
 
 void loop()
@@ -103,7 +110,7 @@ void loop()
   update_joystick();
   //pet_watchdog();
   update_player_state(millis());
-  display_player(8, 1);
+  display_player(8, positionY);
   //display_obstacles(all_obstacles);
   updateLED();
 }
@@ -112,9 +119,9 @@ void update_joystick() {
   int xValue = analogRead(joyX);
   int yValue = analogRead(joyY);
   // map the joysticks value (0, 1023) to (-1, 1) where it is only 0 if at center position (500, 515)
-  joystickPosX = xValue >= 500 && xValue <= 515 ? 0 : xValue > 515 ? 1 : -1;
-  joystickPosY = yValue >= 500 && yValue <= 515 ? 0 : yValue > 515 ? 1 : -1;
-  if(joystickPosX != joystickPrevPosX || joystickPrevPosY != joystickPrevPosY) {
+  joystickPosX = xValue >= joystickInitialPosX - 15 && xValue <= joystickInitialPosX + 15 ? 0 : xValue > joystickInitialPosX + 15 ? 1 : -1;
+  joystickPosY = yValue >= joystickInitialPosY - 15 && yValue <= joystickInitialPosY + 15 ? 0 : yValue > joystickInitialPosY + 15 ? 1 : -1;
+  if(joystickPosX != joystickPrevPosX || joystickPosY != joystickPrevPosY) {
     joystick_position_changed();
   }
   joystickPrevPosX = joystickPosX;
@@ -122,9 +129,8 @@ void update_joystick() {
 }
 
 void joystick_position_changed() {
+  clear();
   positionY = constrain(positionY + joystickPosY, minY, maxY);
-  Serial.println(joystickPosX);
-  Serial.println(joystickPosY);
 }
 
 void update_player_state(long mils)

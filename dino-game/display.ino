@@ -46,3 +46,11 @@ void display_obstacle(obstacle_t *obs)
   lcd.setCursor(obs->x, obs->y);
   lcd.write(byte(BLACK_SQUARE));
 }
+
+/*
+   Clears the LCD display.
+*/
+void clear()
+{
+  lcd.clear();
+}
