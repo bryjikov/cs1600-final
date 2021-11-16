@@ -79,12 +79,22 @@ void update_interval_multiple(job_id_t id, size_t new_interval_multiple)
 
     if (job->id == id) {
       job->interval_multiple = new_interval_multiple;
-//      all_jobs->set(i, job);
       return;
     }
   }
 
   error("tried to update interval multiple of invalid job");
+}
+
+/*
+ * Removes all jobs currently in the global jobs list.
+ */
+void clear_jobs(void)
+{
+  for (int i = 0; i < all_jobs->size(); i++) {
+    free(all_jobs->get(i));
+  }
+  all_jobs->clear();
 }
 
 /*

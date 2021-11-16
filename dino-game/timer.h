@@ -10,7 +10,7 @@
 typedef enum {
   MOVE_OBSTACLES,
   SPEED_UP_OBSTACLES,
-  MAYBE_DIRECTION_CHANGE,
+  DIRECTION_CHANGE,
 } job_id_t;
 
 typedef struct {
