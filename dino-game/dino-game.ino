@@ -1,6 +1,19 @@
 #include <LiquidCrystal.h>
+#include <LinkedPointerList.h>
 #include "obstacles.h"
+#include "timer.h"
 #include "display.h"
+#include "led.h"
+
+#define SERIAL_PRINTF_BUF_SIZE 512
+char SERIAL_PRINTF_BUF[SERIAL_PRINTF_BUF_SIZE];
+
+// This macro allows us to print to the Serial using format strings.
+// E.g. serial_printf("The number is %d\n", 10);
+#define serial_printf(format, args...) do { \
+    snprintf(SERIAL_PRINTF_BUF, SERIAL_PRINTF_BUF_SIZE, format, args); \
+    Serial.print(SERIAL_PRINTF_BUF); \
+  } while (0)
 
 #define joyX A0
 #define joyY A1
@@ -38,52 +51,51 @@ typedef enum
 
 playerState PLAYER_STATE = RUNNING;
 
-const int ledPin = 6;
-
-obstacle_t o;
-
-//LinkedList<obstacle_t> *all_obstacles;
-
 // Prints an error message and halts the system
 void error(String msg) {
   Serial.println(msg);
   while (true);
 }
 
+void obstacle_move_handler(void)
+{
+  // TODO: Assume for now we're just moving left (this will depend on FSM)
+  move_obstacles(all_obstacles, LEFT);
+  remove_out_of_bounds(all_obstacles);
+
+  // Spawn a new obstacle with probability 1/8
+  if (rand() % 8 == 0) {
+    spawn_random_obstacle(all_obstacles, LEFT);
+  }
+}
+
+void obstacle_speed_up_handler(void)
+{
+  job_t *job = get_job(MOVE_OBSTACLES);
+  // Subtracting 1 is 50ms less because this is in terms of the DRIVER_INTERVAL (which is 50ms)
+  update_interval_multiple(MOVE_OBSTACLES, job->interval_multiple - 1);
+}
+
 void setup()
 {
   Serial.begin(9600);
-  lcd.createChar(0, person);
-  lcd.begin(16, 2);
+  while (!Serial);
+
+  initialize_lcd();
+
   pinMode(buttonPin, INPUT);
-  //attachInterrupt(joyY, jumpUpInterrupt, RISING);
+  pinMode(LED_PIN, OUTPUT);
+  attachInterrupt(joyY, jumpUpInterrupt, RISING);
   //attachInterrupt(joyY, jumpDownInterrupt, FALLING);
-  tcConfigure(sampleRate); // configure the timer to run at <sampleRate>Hertz
-  pinMode(ledPin, OUTPUT);
-  o = {15, 1};
-  //all_obstacles = new LinkedList<obstacle_t>();
-}
 
-/**
-   Update the pulsing LED's brightness to cycle between the
-   min and max PWM values, so the LED pulsates constantly.
-*/
-void updateLED(void)
-{
-  // set the LED at current brightness
-  analogWrite(ledPin, ledBrightness);
+  // Configure the timer driver to run every DRIVER_INTERVAL ms
+  tcConfigure(DRIVER_INTERVAL);
 
-  // increase/decrease brightness
-  if (brightnessAscending) {
-    ledBrightness++;
-  } else {
-    ledBrightness--;
-  }
+  all_obstacles = new LinkedPointerList<obstacle_t>();
+  all_jobs = new LinkedPointerList<job_t>();
 
-  // change direction of pulsing if at lower/upper ends
-  if (ledBrightness == PWM_MIN || ledBrightness == PWM_MAX) {
-    brightnessAscending = !brightnessAscending;
-  }
+  register_job(MOVE_OBSTACLES, &obstacle_move_handler, 250);
+  register_job(SPEED_UP_OBSTACLES, &obstacle_speed_up_handler, 1000);
 }
 
 void loop()
@@ -91,8 +103,8 @@ void loop()
   update_joystick();
   //pet_watchdog();
   update_player_state(millis());
-  display_player(8, positionY);
-  display_obstacle(o);
+  display_player(8, 1);
+  //display_obstacles(all_obstacles);
   updateLED();
 }
 
