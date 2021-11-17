@@ -1,7 +1,7 @@
 /*
- * display.h
- * Constants for interacting with the LCD.
- */
+   display.h
+   Constants for interacting with the LCD.
+*/
 
 // Uncomment this for big LCD.
 //#define BIG_LCD

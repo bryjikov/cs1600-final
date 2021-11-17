@@ -62,12 +62,6 @@ void obstacle_move_handler(void)
   if (rand() % 8 == 0) {
     spawn_random_obstacle(all_obstacles, obstacle_direction);
   }
-
-  // If a collision is detected given the current position of the player
-  // and configuration of the obstacles, indicate that it is game over.
-  if (collision_detected(all_obstacles, player_x, player_y)) {
-    game_over_flag = true;
-  }
 }
 
 void obstacle_speed_up_handler(void)
@@ -142,6 +136,16 @@ state_t update_game_state(long mils)
   // By default, remain in the current state
   state_t next_state = current_state;
 
+  // FIXME: does masking off interrupts prevent the timer handler from getting
+  // invoked? That's what I'm trying to prevent here. 
+  noInterrupts(); // mask interrupts to protect access to globals
+
+  // If a collision is detected given the current position of the player
+  // and configuration of the obstacles, indicate that it is game over.
+  if (collision_detected(all_obstacles, player_x, player_y)) {
+    game_over_flag = true;
+  }
+
   switch (current_state) {
     case SETUP:
       initialize_fsm();
@@ -185,6 +189,8 @@ state_t update_game_state(long mils)
       error("invalid state in update_game_state");
       break;
   }
+
+  interrupts();
 
   return next_state;
 }
