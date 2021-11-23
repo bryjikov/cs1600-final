@@ -69,7 +69,7 @@ void setup()
   pinMode(BUTTON_PIN, INPUT);
   pinMode(LED_PIN, OUTPUT);
 
-  // initialize_lcd();
+  initialize_lcd();
   initialize_fsm();
 
   // TODO: figure out how often we want this timer going off
@@ -77,7 +77,7 @@ void setup()
 
   all_obstacles = new LinkedPointerList<obstacle_t>();
 
-  //  setup_watchdog();
+  // setup_watchdog();
 }
 
 void loop()
