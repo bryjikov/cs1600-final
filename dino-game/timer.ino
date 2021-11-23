@@ -3,100 +3,6 @@
    Timer-related functionality.
 */
 
-unsigned long driver_counter = 0;
-
-/*
-   Calls the handler for any jobs whose interval multiples divide
-   the current driver counter.
-*/
-void invoke_driver(void)
-{
-  job_t *job;
-  for (int i = 0; i < all_jobs->size(); i++) {
-    job = all_jobs->get(i);
-
-    if (driver_counter % job->interval_multiple == 0) {
-      serial_printf("Invoking job %d at millis %lu\n", job->id, millis());
-      job->handler();
-    }
-  }
-
-  // FIXME: I'm pretty sure this approach won't work once driver_counter overflows.
-  // However, millis() (an unsigned long) overflows after 50 days, so we could just make
-  // the assumption that this *never* overflows while you're playing the game.
-  //
-  // If we knew all the interval multiples statically, we could manually reset this to 0
-  // just before it hits the LCM of all the interval multiples. However, because the obstacle
-  // move interval changes as the game progresses, this is impossible.
-  driver_counter++;
-}
-
-/*
-   Adds a job to the global list of jobs, given how often it should run
-   (every interval milliseconds)
-*/
-void register_job(job_id_t id, void (*handler)(void), size_t interval)
-{
-  if (interval % DRIVER_INTERVAL != 0) {
-    error("register_job: invalid interval for job");
-  }
-
-  size_t interval_multiple = interval / DRIVER_INTERVAL;
-
-  job_t *job = (job_t *)malloc(sizeof(job_t));
-  job->id = id;
-  job->handler = handler;
-  job->interval_multiple = interval_multiple;
-  all_jobs->add(job);
-}
-
-/*
-   Retrive a job from the global jobs list by its id.
-*/
-job_t *get_job(job_id_t id)
-{
-  job_t *job;
-  for (int i = 0; i < all_jobs->size(); i++) {
-    job = all_jobs->get(i);
-
-    if (job->id == id) {
-      return job;
-    }
-  }
-
-  error("tried to get invalid job");
-}
-
-/*
-   Updates the interval multiple of a job in the global all_jobs list.
-   (useful for changing the obstacle move interval)
-*/
-void update_interval_multiple(job_id_t id, size_t new_interval_multiple)
-{
-  job_t *job;
-  for (int i = 0; i < all_jobs->size(); i++) {
-    job = all_jobs->get(i);
-
-    if (job->id == id) {
-      job->interval_multiple = new_interval_multiple;
-      return;
-    }
-  }
-
-  error("tried to update interval multiple of invalid job");
-}
-
-/*
- * Removes all jobs currently in the global jobs list.
- */
-void clear_jobs(void)
-{
-  for (int i = 0; i < all_jobs->size(); i++) {
-    free(all_jobs->get(i));
-  }
-  all_jobs->clear();
-}
-
 /*
    Checks if TC5 is done syncing.
 */
@@ -160,13 +66,11 @@ void tcConfigure(int sampleRate)
 }
 
 /*
-   Handler for the TC5 timer, which we are using to invoke the driver
-   at a regular interval. The driver then invokes other timed jobs as necessary.
+   Handler for the TC5 timer.
 */
 void TC5_Handler(void)
 {
-  serial_printf("Invoking timer driver at millis %lu\n", millis());
-  invoke_driver();
+  serial_printf("In TC5_Handler at millis %lu\n", millis());
 
   TC5->COUNT16.INTFLAG.bit.MC0 = 1; // Writing a 1 to INTFLAG.bit.MC0 clears the interrupt so that it will run again
 }

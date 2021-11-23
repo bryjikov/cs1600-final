@@ -1,7 +1,6 @@
 #include <LiquidCrystal.h>
 #include <LinkedPointerList.h>
 #include "obstacles.h"
-#include "timer.h"
 #include "display.h"
 #include "led.h"
 
@@ -18,19 +17,29 @@ char SERIAL_PRINTF_BUF[SERIAL_PRINTF_BUF_SIZE];
 #define joyX A0
 #define joyY A1
 #define BUTTON_PIN 8
-#define PRE_DIR_CHG_DURATION 2000 /* How long to remain in PDC state (ms) */
 
 const int rs = 0, en = 1, d4 = 2, d5 = 3, d6 = 4, d7 = 5;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
-/* FSM Variables */
-volatile bool game_over_flag;             /* Set when the player has collided with an obstacle */
-volatile bool pre_direction_change_flag;  /* Set when a direction change is upcoming and user should be warned */
-volatile unsigned long time_entered_pdc;  /* Time (millis()) at which the pre direction change state was entered */
-volatile bool restart_flag;               /* Set when the game should start over */
-volatile direction_t obstacle_direction;  /* Direction of movement for obstacles */
-volatile int player_x;                    /* Current X position of the player */
-volatile int player_y;                    /* Current Y position of the player */
+/* FSM Constants and Variables */
+#define PRE_DIR_CHG_DURATION              2000    /* How long to remain in PDC state (ms) */
+#define DIR_CHG_INTERVAL                  10000   /* How often (ms) a direction change potentially happens */
+#define SPEED_UP_INTERVAL                 1000    /* How often (ms) obstacles are sped up */
+#define INIT_OBSTACLE_MOVE_INTERVAL       1000    /* How often obstacles are moved, initially */
+#define OBSTACLE_MOVE_INTERVAL_DECREASE   50      /* By how much (ms) does the obstacle move interval decrease */
+
+volatile bool game_over_flag;                     /* Set when the player has collided with an obstacle */
+volatile bool pre_direction_change_flag;          /* Set when a direction change is upcoming and user should be warned */
+volatile unsigned long time_entered_pdc;          /* Time (ms) at which the pre direction change state was entered */
+volatile bool restart_flag;                       /* Set when the game should start over */
+volatile unsigned obstacle_move_interval;         /* How often (ms) obstacles move */
+volatile unsigned long time_last_obstacle_move;   /* Time (ms) of last obstacle movement */
+volatile unsigned long time_last_dir_chg;         /* Time (ms) of last direction change event */
+volatile unsigned long time_last_speed_up;        /* Time (ms) that obstacles were last sped up */
+volatile direction_t obstacle_direction;          /* Direction of movement for obstacles */
+volatile int player_x;                            /* Current X position of the player */
+volatile int player_y;                            /* Current Y position of the player */
+LinkedPointerList<obstacle_t> *all_obstacles;     /* List containing all currently active obstacles */
 
 typedef enum
 {
@@ -52,34 +61,6 @@ void error(String msg) {
   while (true);
 }
 
-void obstacle_move_handler(void)
-{
-  // Move obstacles in the current direction and eliminate any that are out of bounds
-  move_obstacles(all_obstacles, obstacle_direction);
-  remove_out_of_bounds(all_obstacles);
-
-  // Spawn a new obstacle with probability 1/8
-  if (rand() % 8 == 0) {
-    spawn_random_obstacle(all_obstacles, obstacle_direction);
-  }
-}
-
-void obstacle_speed_up_handler(void)
-{
-  job_t *job = get_job(MOVE_OBSTACLES);
-  // Subtracting 1 is 50ms less because this is in terms of the DRIVER_INTERVAL (which is 50ms)
-  update_interval_multiple(MOVE_OBSTACLES, job->interval_multiple - 1);
-}
-
-void direction_change_handler(void)
-{
-  // With probability 1/4, trigger a direction change
-  if (rand() % 4 == 0) {
-    pre_direction_change_flag = true;
-    time_entered_pdc = millis();
-  }
-}
-
 void setup()
 {
   Serial.begin(9600);
@@ -88,19 +69,20 @@ void setup()
   pinMode(BUTTON_PIN, INPUT);
   pinMode(LED_PIN, OUTPUT);
 
-  initialize_lcd();
+  // initialize_lcd();
   initialize_fsm();
 
-  // Configure the timer driver to run every DRIVER_INTERVAL ms
-  tcConfigure(DRIVER_INTERVAL);
+  // TODO: figure out how often we want this timer going off
+  tcConfigure(1000);
 
   all_obstacles = new LinkedPointerList<obstacle_t>();
-  all_jobs =      new LinkedPointerList<job_t>();
+
+  //  setup_watchdog();
 }
 
 void loop()
 {
-  pet_watchdog();
+  // pet_watchdog();
   current_state = update_game_state(millis());
   display_player(player_x, player_y);
   display_obstacles(all_obstacles);
@@ -115,14 +97,56 @@ void initialize_fsm(void) {
   pre_direction_change_flag = false;
   time_entered_pdc = 0;
   restart_flag = false;
+  obstacle_move_interval = INIT_OBSTACLE_MOVE_INTERVAL;
+  time_last_obstacle_move = 0;
+  time_last_dir_chg = 0;
+  time_last_speed_up = 0;
   player_x = 8;
   player_y = 1;
   obstacle_direction = LEFT;
+  all_obstacles->clear();
+}
 
-  clear_jobs();
-  register_job(MOVE_OBSTACLES, &obstacle_move_handler, 250);
-  register_job(SPEED_UP_OBSTACLES, &obstacle_speed_up_handler, 1000);
-  register_job(DIRECTION_CHANGE, &direction_change_handler, 10000);
+/*
+   Checks any conditions and updates any state variables for normal gameplay
+   (states NORMAL and PRE_DIRECTION_CHANGE). This involves detecting collisions,
+   moving obstacles, speeding up obstacles, and causing direction changes.
+*/
+void update_for_normal_gameplay(unsigned long mils)
+{
+  // If a collision is detected given the current position of the player
+  // and configuration of the obstacles, indicate that it is game over.
+  if (collision_detected(all_obstacles, player_x, player_y)) {
+    game_over_flag = true;
+    return; // Bail out here, since the game is over
+  }
+  // If it has been long enough since last obstacle move
+  if (mils - time_last_obstacle_move > obstacle_move_interval) {
+    // Move obstacles in the current direction and eliminate any that are out of bounds
+    move_obstacles(all_obstacles, obstacle_direction);
+    remove_out_of_bounds(all_obstacles);
+
+    // Spawn a new obstacle with probability 1/8
+    if (rand() % 8 == 0) {
+      spawn_random_obstacle(all_obstacles, obstacle_direction);
+    }
+
+    time_last_obstacle_move = mils;
+  }
+  // If it has been long enough since last obstacle speed-up
+  if (mils - time_last_speed_up > SPEED_UP_INTERVAL) {
+    obstacle_move_interval -= OBSTACLE_MOVE_INTERVAL_DECREASE;
+    time_last_speed_up = mils;
+  }
+  // If it has been long enough since last direction change event
+  if (mils - time_last_dir_chg > DIR_CHG_INTERVAL) {
+    // With probability 1/4, trigger a direction change
+    if (rand() % 4 == 0) {
+      pre_direction_change_flag = true;
+      time_entered_pdc = millis();
+    }
+    time_last_dir_chg = mils;
+  }
 }
 
 /*
@@ -131,20 +155,12 @@ void initialize_fsm(void) {
    TODO: label all transitions according to an FSM diagram, which we
    also need to update.
 */
-state_t update_game_state(long mils)
+state_t update_game_state(unsigned long mils)
 {
   // By default, remain in the current state
   state_t next_state = current_state;
 
-  // FIXME: does masking off interrupts prevent the timer handler from getting
-  // invoked? That's what I'm trying to prevent here. 
-  noInterrupts(); // mask interrupts to protect access to globals
-
-  // If a collision is detected given the current position of the player
-  // and configuration of the obstacles, indicate that it is game over.
-  if (collision_detected(all_obstacles, player_x, player_y)) {
-    game_over_flag = true;
-  }
+  noInterrupts(); // Mask interrupts to protect access to globals
 
   switch (current_state) {
     case SETUP:
@@ -153,6 +169,7 @@ state_t update_game_state(long mils)
       break;
 
     case GAME_OVER:
+      display_game_over();
       if (restart_flag) {
         next_state = SETUP;
         restart_flag = false;
@@ -160,6 +177,8 @@ state_t update_game_state(long mils)
       break;
 
     case NORMAL:
+      update_for_normal_gameplay(mils);
+
       // Collision has occurred; game over.
       if (game_over_flag) {
         next_state = GAME_OVER;
@@ -172,6 +191,8 @@ state_t update_game_state(long mils)
       break;
 
     case PRE_DIRECTION_CHANGE:
+      update_for_normal_gameplay(mils);
+
       // It's possible a collision occurs during pre-direction change
       if (game_over_flag) {
         next_state = GAME_OVER;

@@ -20,9 +20,9 @@ byte person[8] = {
 };
 
 /*
- * Sets up the LCD screen with appropriate dimensions and creates
- * a custom character for displaying the player.
- */
+   Sets up the LCD screen with appropriate dimensions and creates
+   a custom character for displaying the player.
+*/
 void initialize_lcd(void)
 {
   lcd.createChar(PLAYER_CUSTOM_CHAR, person);
@@ -45,4 +45,12 @@ void display_obstacle(obstacle_t *obs)
 {
   lcd.setCursor(obs->x, obs->y);
   lcd.write(byte(BLACK_SQUARE));
+}
+
+/*
+   Displays a screen indicating that the game has been lost.
+*/
+void display_game_over(void)
+{
+  // TODO: display game over screen here
 }

@@ -4,8 +4,8 @@
 */
 
 /*
- * Produces the opposite of the given direction.
- */
+   Produces the opposite of the given direction.
+*/
 direction_t invert_direction(direction_t dir)
 {
   switch (dir) {
