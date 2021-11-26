@@ -73,20 +73,19 @@ void setup()
   initialize_fsm();
 
   // TODO: figure out how often we want this timer going off
-  tcConfigure(1000);
+  setup_timer();
 
   all_obstacles = new LinkedPointerList<obstacle_t>();
 
-  // setup_watchdog();
+  //setup_watchdog();
 }
 
 void loop()
 {
-  // pet_watchdog();
+  //pet_watchdog();
   current_state = update_game_state(millis());
   display_player(player_x, player_y);
   display_obstacles(all_obstacles);
-  updateLED();
 }
 
 /*
