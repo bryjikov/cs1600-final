@@ -73,11 +73,13 @@ void setup()
   initialize_fsm();
 
   // TODO: figure out how often we want this timer going off
-  setup_timer();
+  timer_setup();
 
   all_obstacles = new LinkedPointerList<obstacle_t>();
 
-  //setup_watchdog();
+  stop_watchdog();
+
+  setup_watchdog();
 }
 
 void loop()
