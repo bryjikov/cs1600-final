@@ -1,5 +1,7 @@
-#include <LiquidCrystal.h>
 #include <LinkedPointerList.h>
+#include <Wire.h> 
+#include <LiquidCrystal.h>
+#include <LiquidCrystal_I2C.h>
 #include "obstacles.h"
 #include "display.h"
 #include "led.h"
@@ -14,12 +16,20 @@ char SERIAL_PRINTF_BUF[SERIAL_PRINTF_BUF_SIZE];
     Serial.print(SERIAL_PRINTF_BUF); \
   } while (0)
 
+/* Joystick Variables */
 #define joyX A0
 #define joyY A1
 #define BUTTON_PIN 8
+int joystickPosX = 0;
+int joystickPosY = 0;
+int joystickPrevPosX = 0;
+int joystickPrevPosY = 0;
+int joystickInitialPosX = 0;
+int joystickInitialPosY = 0;
 
 const int rs = 0, en = 1, d4 = 2, d5 = 3, d6 = 4, d7 = 5;
-LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+// LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+LiquidCrystal_I2C lcd(0x27, LCD_X_DIM, LCD_Y_DIM);
 
 /* FSM Constants and Variables */
 #define PRE_DIR_CHG_DURATION              2000    /* How long to remain in PDC state (ms) */
@@ -64,18 +74,21 @@ void error(String msg) {
 void setup()
 {
   Serial.begin(9600);
-  while (!Serial);
+//  while (!Serial);
 
   pinMode(BUTTON_PIN, INPUT);
   pinMode(LED_PIN, OUTPUT);
 
   initialize_lcd();
-  initialize_fsm();
+//  initialize_fsm();
 
   // TODO: figure out how often we want this timer going off
-  timer_setup();
+//  timer_setup();
 
-  all_obstacles = new LinkedPointerList<obstacle_t>();
+//  all_obstacles = new LinkedPointerList<obstacle_t>();
+
+  joystickInitialPosX = analogRead(joyX);
+  joystickInitialPosY = analogRead(joyY);
 
   stop_watchdog();
 
@@ -84,10 +97,12 @@ void setup()
 
 void loop()
 {
-  //pet_watchdog();
-  current_state = update_game_state(millis());
+  pet_watchdog();
+//  current_state = update_game_state(millis());
+update_joystick();
+  clear();
   display_player(player_x, player_y);
-  display_obstacles(all_obstacles);
+//  display_obstacles(all_obstacles);
 }
 
 /*
@@ -106,6 +121,26 @@ void initialize_fsm(void) {
   player_y = 1;
   obstacle_direction = LEFT;
   all_obstacles->clear();
+}
+
+/* 
+  Update Joystick position and map the joysticks value (0, 1023) to (-1, 1) where it is only 0 if at center position (500, 515)
+*/
+void update_joystick() {
+  int xValue = analogRead(joyX);
+  int yValue = analogRead(joyY);
+  joystickPosX = xValue >= joystickInitialPosX - 15 && xValue <= joystickInitialPosX + 15 ? 0 : xValue > joystickInitialPosX + 15 ? 1 : -1;
+  joystickPosY = yValue >= joystickInitialPosY - 15 && yValue <= joystickInitialPosY + 15 ? 0 : yValue > joystickInitialPosY + 15 ? 1 : -1;
+  if(joystickPosX != joystickPrevPosX || joystickPosY != joystickPrevPosY) {
+    joystick_position_changed();
+  }
+  joystickPrevPosX = joystickPosX;
+  joystickPrevPosY = joystickPosY;
+}
+
+void joystick_position_changed() {
+  player_x = constrain(player_x + joystickPosX, LCD_X_MIN, LCD_X_MAX);
+  player_y = constrain(player_y + joystickPosY, LCD_Y_MIN, LCD_Y_MAX);
 }
 
 /*
