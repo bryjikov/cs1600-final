@@ -97,12 +97,9 @@ void setup()
 
 void loop()
 {
-  pet_watchdog();
-//  current_state = update_game_state(millis());
-update_joystick();
-  clear();
-  display_player(player_x, player_y);
-//  display_obstacles(all_obstacles);
+  // pet_watchdog();
+  current_state = update_game_state(millis());
+  updateLED();
 }
 
 /*
@@ -117,8 +114,8 @@ void initialize_fsm(void) {
   time_last_obstacle_move = 0;
   time_last_dir_chg = 0;
   time_last_speed_up = 0;
-  player_x = 8;
-  player_y = 1;
+  player_x = LCD_X_DIM / 2; // Start the player at the bottom and middle of the screen
+  player_y = LCD_Y_MAX;
   obstacle_direction = LEFT;
   all_obstacles->clear();
 }
@@ -150,12 +147,6 @@ void joystick_position_changed() {
 */
 void update_for_normal_gameplay(unsigned long mils)
 {
-  // If a collision is detected given the current position of the player
-  // and configuration of the obstacles, indicate that it is game over.
-  if (collision_detected(all_obstacles, player_x, player_y)) {
-    game_over_flag = true;
-    return; // Bail out here, since the game is over
-  }
   // If it has been long enough since last obstacle move
   if (mils - time_last_obstacle_move > obstacle_move_interval) {
     // Move obstacles in the current direction and eliminate any that are out of bounds
@@ -183,6 +174,15 @@ void update_for_normal_gameplay(unsigned long mils)
     }
     time_last_dir_chg = mils;
   }
+  // If a collision is detected given the current position of the player
+  // and configuration of the obstacles, indicate that it is game over.
+  if (collision_detected(all_obstacles, player_x, player_y)) {
+    game_over_flag = true;
+    return; // Bail out here, since the game is over
+  }
+  update_joystick();
+  display_player(player_x, player_y);
+  display_obstacles(all_obstacles);
 }
 
 /*
