@@ -4,8 +4,8 @@
 */
 
 // Range of PWM values for analogWrite
-#define PWM_MIN 0
-#define PWM_MAX 255
+#define PWM_MIN 255
+#define PWM_MAX 0
 
 int led_brightness = 0;
 bool brightness_ascending = true;
@@ -33,6 +33,6 @@ void updateLED(void)
       brightness_ascending = !brightness_ascending;
     }
   } else {
-    analogWrite(LED_PIN, 0);
+    analogWrite(LED_PIN, PWM_MIN);
   }
 }

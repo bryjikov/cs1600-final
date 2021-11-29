@@ -54,6 +54,9 @@ void display_obstacle(obstacle_t *obs)
 void display_game_over(void)
 {
   // TODO: display game over screen here
+  clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Game Over!");
 }
 
 /*
