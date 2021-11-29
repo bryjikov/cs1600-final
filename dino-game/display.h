@@ -4,7 +4,7 @@
 */
 
 // Uncomment this for big LCD.
-//#define BIG_LCD
+#define BIG_LCD
 
 // Constants which define the dimensions of the LCD screen
 #ifdef BIG_LCD

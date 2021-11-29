@@ -25,8 +25,9 @@ byte person[8] = {
 */
 void initialize_lcd(void)
 {
+  lcd.init();
+  lcd.backlight();
   lcd.createChar(PLAYER_CUSTOM_CHAR, person);
-  lcd.begin(LCD_X_DIM, LCD_Y_DIM);
 }
 
 /*
@@ -53,4 +54,15 @@ void display_obstacle(obstacle_t *obs)
 void display_game_over(void)
 {
   // TODO: display game over screen here
+  clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Game Over!");
+}
+
+/*
+   Clears LCD display.
+*/
+void clear()
+{
+  lcd.clear();
 }

@@ -1,5 +1,8 @@
-#include <LiquidCrystal.h>
 #include <LinkedPointerList.h>
+#include <Wire.h>
+#include <LiquidCrystal.h>
+#include <LiquidCrystal_I2C.h>
+#include <time.h>
 #include "obstacles.h"
 #include "display.h"
 #include "led.h"
@@ -14,17 +17,25 @@ char SERIAL_PRINTF_BUF[SERIAL_PRINTF_BUF_SIZE];
     Serial.print(SERIAL_PRINTF_BUF); \
   } while (0)
 
+/* Joystick Variables */
 #define joyX A0
 #define joyY A1
 #define BUTTON_PIN 8
+int joystickPosX = 0;
+int joystickPosY = 0;
+int joystickPrevPosX = 0;
+int joystickPrevPosY = 0;
+int joystickInitialPosX = 0;
+int joystickInitialPosY = 0;
 
 const int rs = 0, en = 1, d4 = 2, d5 = 3, d6 = 4, d7 = 5;
-LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+// LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+LiquidCrystal_I2C lcd(0x27, LCD_X_DIM, LCD_Y_DIM);
 
 /* FSM Constants and Variables */
 #define PRE_DIR_CHG_DURATION              2000    /* How long to remain in PDC state (ms) */
 #define DIR_CHG_INTERVAL                  10000   /* How often (ms) a direction change potentially happens */
-#define SPEED_UP_INTERVAL                 1000    /* How often (ms) obstacles are sped up */
+#define SPEED_UP_INTERVAL                 5000    /* How often (ms) obstacles are sped up */
 #define INIT_OBSTACLE_MOVE_INTERVAL       1000    /* How often obstacles are moved, initially */
 #define OBSTACLE_MOVE_INTERVAL_DECREASE   50      /* By how much (ms) does the obstacle move interval decrease */
 
@@ -39,6 +50,7 @@ volatile unsigned long time_last_speed_up;        /* Time (ms) that obstacles we
 volatile direction_t obstacle_direction;          /* Direction of movement for obstacles */
 volatile int player_x;                            /* Current X position of the player */
 volatile int player_y;                            /* Current Y position of the player */
+volatile bool moved;                              /* Set if either the player or obstacles moved since the last display */
 LinkedPointerList<obstacle_t> *all_obstacles;     /* List containing all currently active obstacles */
 
 typedef enum
@@ -53,7 +65,7 @@ typedef enum
   GAME_OVER,
 } state_t;
 
-state_t current_state = SETUP;
+state_t current_state;
 
 // Prints an error message and halts the system
 void error(String msg) {
@@ -64,27 +76,34 @@ void error(String msg) {
 void setup()
 {
   Serial.begin(9600);
-  while (!Serial);
+  Serial.println("setting up game...");
+  //  while (!Serial);
+
+  srand(time(NULL));
 
   pinMode(BUTTON_PIN, INPUT);
   pinMode(LED_PIN, OUTPUT);
 
-  initialize_lcd();
-  initialize_fsm();
-
-  // TODO: figure out how often we want this timer going off
-  tcConfigure(1000);
+  current_state = SETUP;
 
   all_obstacles = new LinkedPointerList<obstacle_t>();
 
-  // setup_watchdog();
+  initialize_lcd();
+  initialize_fsm();
+
+  timer_setup();
+
+  joystickInitialPosX = analogRead(joyX);
+  joystickInitialPosY = analogRead(joyY);
+
+  stop_watchdog();
+  setup_watchdog();
 }
 
 void loop()
 {
-  // pet_watchdog();
+  pet_watchdog();
   current_state = update_game_state(millis());
-  updateLED();
 }
 
 /*
@@ -102,7 +121,29 @@ void initialize_fsm(void) {
   player_x = LCD_X_DIM / 2; // Start the player at the bottom and middle of the screen
   player_y = LCD_Y_MAX;
   obstacle_direction = LEFT;
+  moved = true;
   all_obstacles->clear();
+}
+
+/*
+  Update Joystick position and map the joysticks value (0, 1023) to (-1, 1) where it is only 0 if at center position (500, 515)
+*/
+void update_joystick() {
+  int xValue = analogRead(joyX);
+  int yValue = analogRead(joyY);
+  joystickPosX = xValue >= joystickInitialPosX - 15 && xValue <= joystickInitialPosX + 15 ? 0 : xValue > joystickInitialPosX + 15 ? 1 : -1;
+  joystickPosY = yValue >= joystickInitialPosY - 15 && yValue <= joystickInitialPosY + 15 ? 0 : yValue > joystickInitialPosY + 15 ? 1 : -1;
+  if (joystickPosX != joystickPrevPosX || joystickPosY != joystickPrevPosY) {
+    joystick_position_changed();
+  }
+  joystickPrevPosX = joystickPosX;
+  joystickPrevPosY = joystickPosY;
+}
+
+void joystick_position_changed() {
+  player_x = constrain(player_x + joystickPosX, LCD_X_MIN, LCD_X_MAX);
+  player_y = constrain(player_y + joystickPosY, LCD_Y_MIN, LCD_Y_MAX);
+  moved = true;
 }
 
 /*
@@ -118,12 +159,13 @@ void update_for_normal_gameplay(unsigned long mils)
     move_obstacles(all_obstacles, obstacle_direction);
     remove_out_of_bounds(all_obstacles);
 
-    // Spawn a new obstacle with probability 1/8
-    if (rand() % 8 == 0) {
+    // Spawn a new obstacle with probability 1/4
+    if (rand() % 4 == 0) {
       spawn_random_obstacle(all_obstacles, obstacle_direction);
     }
 
     time_last_obstacle_move = mils;
+    moved = true;
   }
   // If it has been long enough since last obstacle speed-up
   if (mils - time_last_speed_up > SPEED_UP_INTERVAL) {
@@ -143,11 +185,15 @@ void update_for_normal_gameplay(unsigned long mils)
   // and configuration of the obstacles, indicate that it is game over.
   if (collision_detected(all_obstacles, player_x, player_y)) {
     game_over_flag = true;
-    return; // Bail out here, since the game is over
   }
+  update_joystick();
 
-  display_player(player_x, player_y);
-  display_obstacles(all_obstacles);
+  if (moved) {
+    clear();
+    display_player(player_x, player_y);
+    display_obstacles(all_obstacles);
+    moved = false;
+  }
 }
 
 /*
@@ -161,17 +207,19 @@ state_t update_game_state(unsigned long mils)
   // By default, remain in the current state
   state_t next_state = current_state;
 
-  noInterrupts(); // Mask interrupts to protect access to globals
+  //  noInterrupts(); // Mask interrupts to protect access to globals
 
   switch (current_state) {
     case SETUP:
       initialize_fsm();
+      Serial.println("TRANSITIONING TO NORMAL");
       next_state = NORMAL;
       break;
 
     case GAME_OVER:
       display_game_over();
       if (restart_flag) {
+        Serial.println("TRANSITIONING TO SETUP");
         next_state = SETUP;
         restart_flag = false;
       }
@@ -182,10 +230,12 @@ state_t update_game_state(unsigned long mils)
 
       // Collision has occurred; game over.
       if (game_over_flag) {
+        Serial.println("TRANSITIONING TO GAME OVER");
         next_state = GAME_OVER;
         game_over_flag = false;
         // It is time for a direction change
       } else if (pre_direction_change_flag) {
+        Serial.println("TRANSITIONING TO PRE DIRECTION");
         next_state = PRE_DIRECTION_CHANGE;
         pre_direction_change_flag = false;
       }
@@ -196,12 +246,14 @@ state_t update_game_state(unsigned long mils)
 
       // It's possible a collision occurs during pre-direction change
       if (game_over_flag) {
+        Serial.println("TRANSITIONING TO GAME OVER");
         next_state = GAME_OVER;
         game_over_flag = false;
       }
       // If it has been long enough since the pre direction change state was
       // entered, flip the direction of obstacle movement and transition to NORMAL.
       else if (mils - time_entered_pdc >= PRE_DIR_CHG_DURATION) {
+        Serial.println("TRANSITIONING TO NORMAL");
         obstacle_direction = invert_direction(obstacle_direction);
         next_state = NORMAL;
       }
@@ -212,7 +264,7 @@ state_t update_game_state(unsigned long mils)
       break;
   }
 
-  interrupts();
+  //  interrupts();
 
   return next_state;
 }
