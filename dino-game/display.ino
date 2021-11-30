@@ -60,7 +60,7 @@ void display_setup(void)
 {
   clear();
   lcd.setCursor(LCD_TEXT_CENTER_X, LCD_TEXT_CENTER_Y);
-  lcd.print("Ready?  :0");
+  lcd.print("Ready?  :O");
 }
 
 /*
