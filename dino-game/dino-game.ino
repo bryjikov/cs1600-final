@@ -29,8 +29,11 @@ int joystickInitialPosX = 0;
 int joystickInitialPosY = 0;
 
 const int rs = 0, en = 1, d4 = 2, d5 = 3, d6 = 4, d7 = 5;
-// LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+#ifdef BIG_LCD
 LiquidCrystal_I2C lcd(0x27, LCD_X_DIM, LCD_Y_DIM);
+#else 
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+#endif
 
 /* FSM Constants and Variables */
 #define PRE_DIR_CHG_DURATION              2000    /* How long to remain in PDC state (ms) */

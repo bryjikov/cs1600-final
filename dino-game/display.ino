@@ -25,9 +25,14 @@ byte person[8] = {
 */
 void initialize_lcd(void)
 {
-  lcd.init();
-  lcd.backlight();
-  lcd.createChar(PLAYER_CUSTOM_CHAR, person);
+  #ifdef BIG_LCD
+    lcd.init();
+    lcd.backlight();
+    lcd.createChar(PLAYER_CUSTOM_CHAR, person);
+  #else 
+    lcd.createChar(PLAYER_CUSTOM_CHAR, person);
+    lcd.begin(LCD_X_DIM, LCD_Y_DIM);
+  #endif
 }
 
 /*
