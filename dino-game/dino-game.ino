@@ -56,6 +56,8 @@ volatile direction_t obstacle_direction;          /* Direction of movement for o
 volatile int player_x;                            /* Current X position of the player */
 volatile int player_y;                            /* Current Y position of the player */
 volatile bool moved;                              /* Set if either the player or obstacles moved since the last display */
+volatile unsigned long start_time;                /* The time (in milis) when the player begins */
+volatile unsigned long duration;                  /* The total time that the game lasted */
 LinkedPointerList<obstacle_t> *all_obstacles;     /* List containing all currently active obstacles */
 
 typedef enum
@@ -88,6 +90,8 @@ void setup()
 
   pinMode(BUTTON_PIN, INPUT);
   pinMode(LED_PIN, OUTPUT);
+  
+  attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), buttonPressInterrupt, RISING);
 
   current_state = SETUP;
 
@@ -123,6 +127,8 @@ void initialize_fsm(void) {
   time_last_obstacle_move = 0;
   time_last_dir_chg = 0;
   time_last_speed_up = 0;
+  start_time = 0;
+  duration = 0;
   player_x = LCD_X_DIM / 2; // Start the player at the bottom and middle of the screen
   player_y = LCD_Y_MAX;
   obstacle_direction = LEFT;
@@ -190,6 +196,7 @@ void update_for_normal_gameplay(unsigned long mils)
   // and configuration of the obstacles, indicate that it is game over.
   if (collision_detected(all_obstacles, player_x, player_y)) {
     game_over_flag = true;
+    duration = millis() - start_time;
   }
   update_joystick();
 
@@ -219,6 +226,7 @@ state_t update_game_state(unsigned long mils)
       initialize_fsm();
       Serial.println("TRANSITIONING TO NORMAL");
       next_state = NORMAL;
+      start_time = millis();
       break;
 
     case GAME_OVER:
@@ -272,4 +280,10 @@ state_t update_game_state(unsigned long mils)
   //  interrupts();
 
   return next_state;
+}
+
+void buttonPressInterrupt(){
+  if(current_state == GAME_OVER){
+    restart_flag = true;
+  }
 }
