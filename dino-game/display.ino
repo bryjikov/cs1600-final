@@ -86,7 +86,7 @@ void display_game_over(unsigned long total_time)
   clear();
   lcd.setCursor(LCD_TEXT_CENTER_X, LCD_TEXT_CENTER_Y);
   lcd.print("Game Over!");
-  lcd.setCursor(LCD_TEXT_CENTER_X, LCD_TEXT_CENTER_Y + 1);
+  lcd.setCursor(LCD_TEXT_CENTER_X-1, LCD_TEXT_CENTER_Y + 1);
   lcd.print("Score: ");
   lcd.print(total_time);
 }
