@@ -25,14 +25,9 @@ byte person[8] = {
 */
 void initialize_lcd(void)
 {
-  #ifdef BIG_LCD
-    lcd.init();
-    lcd.backlight();
-    lcd.createChar(PLAYER_CUSTOM_CHAR, person);
-  #else 
-    lcd.createChar(PLAYER_CUSTOM_CHAR, person);
-    lcd.begin(LCD_X_DIM, LCD_Y_DIM);
-  #endif
+  lcd.init();
+  lcd.backlight();
+  lcd.createChar(PLAYER_CUSTOM_CHAR, person);
 }
 
 /*
@@ -56,12 +51,14 @@ void display_obstacle(obstacle_t *obs)
 /*
    Displays a screen indicating that the game has been lost.
 */
-void display_game_over(void)
-{
+void display_game_over(unsigned long total_time){
   // TODO: display game over screen here
   clear();
   lcd.setCursor(0, 0);
   lcd.print("Game Over!");
+  lcd.setCursor(0,1);
+  lcd.print("Score: ");
+  lcd.print(total_time); 
 }
 
 /*
