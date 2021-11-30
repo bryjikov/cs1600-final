@@ -17,6 +17,9 @@
 #define LCD_Y_MIN 0
 #define LCD_Y_MAX 3
 
+#define LCD_TEXT_CENTER_X 5
+#define LCD_TEXT_CENTER_Y 1
+
 #else
 
 #define LCD_X_DIM 16
@@ -26,5 +29,8 @@
 #define LCD_X_MAX 15
 #define LCD_Y_MIN 0
 #define LCD_Y_MAX 1
+
+#define LCD_TEXT_CENTER_X 3
+#define LCD_TEXT_CENTER_Y 0
 
 #endif
