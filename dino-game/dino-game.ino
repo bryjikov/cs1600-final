@@ -107,9 +107,7 @@ void setup()
 
   current_state = SETUP;
   time_entered_setup = millis();
-
-  Serial.println("setup time");
-  Serial.println(millis());
+  display_setup();
 }
 
 void loop()
@@ -225,7 +223,6 @@ state_t update_game_state(unsigned long mils)
 
   switch (current_state) {
     case SETUP:
-      display_setup();
       // If we've waited in SETUP long enough
       if (mils - time_entered_setup >= SETUP_WAIT_DURATION) {
         reset_fsm_variables(mils);
@@ -236,11 +233,11 @@ state_t update_game_state(unsigned long mils)
       break;
 
     case GAME_OVER:
-      display_game_over(duration);
       if (restart_flag) {
         Serial.println("TRANSITIONING TO SETUP");
         next_state = SETUP;
         time_entered_setup = mils;
+        display_setup();
         restart_flag = false;
       }
       break;
@@ -253,6 +250,7 @@ state_t update_game_state(unsigned long mils)
         Serial.println("TRANSITIONING TO GAME OVER");
         next_state = GAME_OVER;
         game_over_flag = false;
+        display_game_over(duration);
         // It is time for a direction change
       } else if (pre_direction_change_flag) {
         Serial.println("TRANSITIONING TO PRE DIRECTION");
@@ -269,6 +267,7 @@ state_t update_game_state(unsigned long mils)
         Serial.println("TRANSITIONING TO GAME OVER");
         next_state = GAME_OVER;
         game_over_flag = false;
+        display_game_over(duration);
       }
       // If it has been long enough since the pre direction change state was
       // entered, flip the direction of obstacle movement and transition to NORMAL.
@@ -287,9 +286,7 @@ state_t update_game_state(unsigned long mils)
   return next_state;
 }
 
-void buttonPressInterrupt(void)
-{
-  Serial.println("Button press!");
+void buttonPressInterrupt(void){
   if(current_state == GAME_OVER){
     restart_flag = true;
   }
