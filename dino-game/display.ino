@@ -27,8 +27,8 @@ byte obstacle[8] = {
   B01110,
   B01110,
   B11111,
+  B01110,
   B11111,
-  B00100,
   B00100,
 };
 
@@ -65,7 +65,7 @@ void display_player(byte x, byte y)
 void display_obstacle(obstacle_t *obs)
 {
   lcd.setCursor(obs->x, obs->y);
-  lcd.write(byte(BLACK_SQUARE));
+  lcd.write(byte(OBSTACLE_CUSTOM_CHAR));
 }
 
 /*
