@@ -49,11 +49,21 @@ void display_obstacle(obstacle_t *obs)
 }
 
 /*
+ * Displays a screen which indicates that the game is about to begin.
+ */
+void display_setup(void)
+{
+  clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Ready?");
+}
+
+/*
    Displays a screen indicating that the game has been lost.
 */
 void display_game_over(void)
 {
-  // TODO: display game over screen here
+  // TODO: center this better
   clear();
   lcd.setCursor(0, 0);
   lcd.print("Game Over!");

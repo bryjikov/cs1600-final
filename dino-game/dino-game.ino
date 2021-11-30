@@ -38,6 +38,7 @@ LiquidCrystal_I2C lcd(0x27, LCD_X_DIM, LCD_Y_DIM);
 #define SPEED_UP_INTERVAL                 5000    /* How often (ms) obstacles are sped up */
 #define INIT_OBSTACLE_MOVE_INTERVAL       1000    /* How often obstacles are moved, initially */
 #define OBSTACLE_MOVE_INTERVAL_DECREASE   50      /* By how much (ms) does the obstacle move interval decrease */
+#define SETUP_WAIT_DURATION               2000    /* How long to wait in SETUP state (ms) */
 
 volatile bool game_over_flag;                     /* Set when the player has collided with an obstacle */
 volatile bool pre_direction_change_flag;          /* Set when a direction change is upcoming and user should be warned */
@@ -47,6 +48,7 @@ volatile unsigned obstacle_move_interval;         /* How often (ms) obstacles mo
 volatile unsigned long time_last_obstacle_move;   /* Time (ms) of last obstacle movement */
 volatile unsigned long time_last_dir_chg;         /* Time (ms) of last direction change event */
 volatile unsigned long time_last_speed_up;        /* Time (ms) that obstacles were last sped up */
+volatile unsigned long time_entered_setup;        /* Time (ms) when SETUP state was entered */
 volatile direction_t obstacle_direction;          /* Direction of movement for obstacles */
 volatile int player_x;                            /* Current X position of the player */
 volatile int player_y;                            /* Current Y position of the player */
@@ -79,17 +81,17 @@ void setup()
   Serial.println("setting up game...");
   //  while (!Serial);
 
-  srand(time(NULL));
+  srand(time(NULL));  // Set the random seed
 
   pinMode(BUTTON_PIN, INPUT);
   pinMode(LED_PIN, OUTPUT);
 
   current_state = SETUP;
+  time_entered_setup = millis();
 
   all_obstacles = new LinkedPointerList<obstacle_t>();
 
   initialize_lcd();
-  initialize_fsm();
 
   timer_setup();
 
@@ -109,7 +111,7 @@ void loop()
 /*
    Sets all FSM variables back to their initial states.
 */
-void initialize_fsm(void) {
+void reset_fsm_variables(unsigned long mils) {
   game_over_flag = false;
   pre_direction_change_flag = false;
   time_entered_pdc = 0;
@@ -118,6 +120,7 @@ void initialize_fsm(void) {
   time_last_obstacle_move = 0;
   time_last_dir_chg = 0;
   time_last_speed_up = 0;
+  time_entered_setup = 0;
   player_x = LCD_X_DIM / 2; // Start the player at the bottom and middle of the screen
   player_y = LCD_Y_MAX;
   obstacle_direction = LEFT;
@@ -177,7 +180,7 @@ void update_for_normal_gameplay(unsigned long mils)
     // With probability 1/4, trigger a direction change
     if (rand() % 4 == 0) {
       pre_direction_change_flag = true;
-      time_entered_pdc = millis();
+      time_entered_pdc = mils;
     }
     time_last_dir_chg = mils;
   }
@@ -207,13 +210,15 @@ state_t update_game_state(unsigned long mils)
   // By default, remain in the current state
   state_t next_state = current_state;
 
-  //  noInterrupts(); // Mask interrupts to protect access to globals
-
   switch (current_state) {
     case SETUP:
-      initialize_fsm();
-      Serial.println("TRANSITIONING TO NORMAL");
-      next_state = NORMAL;
+      display_setup();
+      // If we've waited in SETUP long enough
+      if (mils - time_entered_setup >= SETUP_WAIT_DURATION) {
+        reset_fsm_variables(mils);
+        Serial.println("TRANSITIONING TO NORMAL");
+        next_state = NORMAL;
+      }
       break;
 
     case GAME_OVER:
@@ -221,6 +226,7 @@ state_t update_game_state(unsigned long mils)
       if (restart_flag) {
         Serial.println("TRANSITIONING TO SETUP");
         next_state = SETUP;
+        time_entered_setup = mils;
         restart_flag = false;
       }
       break;
@@ -263,8 +269,6 @@ state_t update_game_state(unsigned long mils)
       error("invalid state in update_game_state");
       break;
   }
-
-  //  interrupts();
 
   return next_state;
 }
