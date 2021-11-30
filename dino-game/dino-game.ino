@@ -20,7 +20,7 @@ char SERIAL_PRINTF_BUF[SERIAL_PRINTF_BUF_SIZE];
 /* Joystick Variables */
 #define joyX A0
 #define joyY A1
-#define BUTTON_PIN 8
+#define BUTTON_PIN 2
 int joystickPosX = 0;
 int joystickPosY = 0;
 int joystickPrevPosX = 0;
@@ -38,7 +38,7 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 /* FSM Constants and Variables */
 #define PRE_DIR_CHG_DURATION              2000    /* How long to remain in PDC state (ms) */
 #define DIR_CHG_INTERVAL                  10000   /* How often (ms) a direction change potentially happens */
-#define SPEED_UP_INTERVAL                 5000    /* How often (ms) obstacles are sped up */
+#define SPEED_UP_INTERVAL                 3000    /* How often (ms) obstacles are sped up */
 #define INIT_OBSTACLE_MOVE_INTERVAL       1000    /* How often obstacles are moved, initially */
 #define OBSTACLE_MOVE_INTERVAL_DECREASE   50      /* By how much (ms) does the obstacle move interval decrease */
 #define SETUP_WAIT_DURATION               2000    /* How long to wait in SETUP state (ms) */
@@ -88,7 +88,7 @@ void setup()
 
   srand(time(NULL));  // Set the random seed
 
-  pinMode(BUTTON_PIN, INPUT);
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
   pinMode(LED_PIN, OUTPUT);
   
   attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), buttonPressInterrupt, RISING);
@@ -287,7 +287,9 @@ state_t update_game_state(unsigned long mils)
   return next_state;
 }
 
-void buttonPressInterrupt(){
+void buttonPressInterrupt(void)
+{
+  Serial.println("Button press!");
   if(current_state == GAME_OVER){
     restart_flag = true;
   }
