@@ -86,9 +86,6 @@ void setup()
   pinMode(BUTTON_PIN, INPUT);
   pinMode(LED_PIN, OUTPUT);
 
-  current_state = SETUP;
-  time_entered_setup = millis();
-
   all_obstacles = new LinkedPointerList<obstacle_t>();
 
   initialize_lcd();
@@ -100,6 +97,12 @@ void setup()
 
   stop_watchdog();
   setup_watchdog();
+
+  current_state = SETUP;
+  time_entered_setup = millis();
+
+  Serial.println("setup time");
+  Serial.println(millis());
 }
 
 void loop()
