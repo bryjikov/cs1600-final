@@ -5,6 +5,7 @@
 */
 
 #define PLAYER_CUSTOM_CHAR 0
+#define OBSTACLE_CUSTOM_CHAR 1
 #define BLACK_SQUARE 255
 
 // A person character
@@ -19,20 +20,34 @@ byte person[8] = {
   B10001,
 };
 
+// An obstacle looks like a Christmas tree
+byte obstacle[8] = {
+  B00100,
+  B00100,
+  B01110,
+  B01110,
+  B11111,
+  B01110,
+  B11111,
+  B00100,
+};
+
 /*
    Sets up the LCD screen with appropriate dimensions and creates
    a custom character for displaying the player.
 */
 void initialize_lcd(void)
 {
-  #ifdef BIG_LCD
-    lcd.init();
-    lcd.backlight();
-    lcd.createChar(PLAYER_CUSTOM_CHAR, person);
-  #else 
-    lcd.createChar(PLAYER_CUSTOM_CHAR, person);
-    lcd.begin(LCD_X_DIM, LCD_Y_DIM);
-  #endif
+#ifdef BIG_LCD
+  lcd.init();
+  lcd.backlight();
+  lcd.createChar(PLAYER_CUSTOM_CHAR, person);
+  lcd.createChar(OBSTACLE_CUSTOM_CHAR, obstacle);
+#else
+  lcd.createChar(PLAYER_CUSTOM_CHAR, person);
+  lcd.createChar(OBSTACLE_CUSTOM_CHAR, obstacle);
+  lcd.begin(LCD_X_DIM, LCD_Y_DIM);
+#endif
 }
 
 /*
@@ -50,7 +65,7 @@ void display_player(byte x, byte y)
 void display_obstacle(obstacle_t *obs)
 {
   lcd.setCursor(obs->x, obs->y);
-  lcd.write(byte(BLACK_SQUARE));
+  lcd.write(byte(OBSTACLE_CUSTOM_CHAR));
 }
 
 /*
@@ -73,7 +88,7 @@ void display_game_over(unsigned long total_time)
   lcd.print("Game Over!");
   lcd.setCursor(LCD_TEXT_CENTER_X, LCD_TEXT_CENTER_Y + 1);
   lcd.print("Score: ");
-  lcd.print(total_time); 
+  lcd.print(total_time);
 }
 
 /*
