@@ -6,32 +6,12 @@
 #include "obstacles.h"
 #include "display.h"
 #include "led.h"
+#include "logging.h"
 
-#define SERIAL_PRINTF_BUF_SIZE 512
-char SERIAL_PRINTF_BUF[SERIAL_PRINTF_BUF_SIZE];
-
-// This macro allows us to print to the Serial using format strings.
-// E.g. serial_printf("The number is %d\n", 10);
-#define serial_printf(format, args...) do { \
-    snprintf(SERIAL_PRINTF_BUF, SERIAL_PRINTF_BUF_SIZE, format, args); \
-    Serial.print(SERIAL_PRINTF_BUF); \
-  } while (0)
-
-/* Joystick Variables */
-#define joyX A0
-#define joyY A1
-#define BUTTON_PIN 2
-int joystickPosX = 0;
-int joystickPosY = 0;
-int joystickPrevPosX = 0;
-int joystickPrevPosY = 0;
-int joystickInitialPosX = 0;
-int joystickInitialPosY = 0;
-
-const int rs = 0, en = 1, d4 = 2, d5 = 3, d6 = 4, d7 = 5;
 #ifdef BIG_LCD
 LiquidCrystal_I2C lcd(0x27, LCD_X_DIM, LCD_Y_DIM);
-#else 
+#else
+const int rs = 0, en = 1, d4 = 2, d5 = 3, d6 = 4, d7 = 5;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 #endif
 
@@ -60,6 +40,17 @@ volatile unsigned long start_time;                /* The time (in milis) when th
 volatile unsigned long duration;                  /* The total time that the game lasted */
 LinkedPointerList<obstacle_t> *all_obstacles;     /* List containing all currently active obstacles */
 
+/* Joystick Variables */
+#define JOY_X A0
+#define JOY_Y A1
+#define BUTTON_PIN 2
+int joystickPosX = 0;
+int joystickPosY = 0;
+int joystickPrevPosX = 0;
+int joystickPrevPosY = 0;
+int joystickInitialPosX = 0;
+int joystickInitialPosY = 0;
+
 typedef enum
 {
   /* All FSM variables should be initialized */
@@ -74,23 +65,14 @@ typedef enum
 
 state_t current_state;
 
-// Prints an error message and halts the system
-void error(String msg) {
-  Serial.println(msg);
-  while (true);
-}
-
 void setup()
 {
   Serial.begin(9600);
-  Serial.println("setting up game...");
-  //  while (!Serial);
 
   srand(time(NULL));  // Set the random seed
 
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
   pinMode(LED_PIN, OUTPUT);
-  
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), buttonPressInterrupt, RISING);
 
   all_obstacles = new LinkedPointerList<obstacle_t>();
@@ -99,12 +81,13 @@ void setup()
 
   timer_setup();
 
-  joystickInitialPosX = analogRead(joyX);
-  joystickInitialPosY = analogRead(joyY);
+  joystickInitialPosX = analogRead(JOY_X);
+  joystickInitialPosY = analogRead(JOY_Y);
 
   stop_watchdog();
   setup_watchdog();
 
+  // Enter the SETUP state to kick off the FSM
   current_state = SETUP;
   time_entered_setup = millis();
   display_setup();
@@ -113,7 +96,18 @@ void setup()
 void loop()
 {
   pet_watchdog();
-  current_state = update_game_state(millis());
+  atomically_update_current_state(update_game_state(millis()));
+}
+
+/*
+   Updates the current_state global, but ensures that no interrupt
+   handler is concurrently accessing it.
+*/
+void atomically_update_current_state(state_t new_state)
+{
+  noInterrupts();
+  current_state = new_state;
+  interrupts();
 }
 
 /*
@@ -139,11 +133,13 @@ void reset_fsm_variables(unsigned long mils) {
 }
 
 /*
-  Update Joystick position and map the joysticks value (0, 1023) to (-1, 1) where it is only 0 if at center position (500, 515)
+  Update Joystick position and map the joysticks value (0, 1023) to
+  (-1, 1) where it is only 0 if at center position (500, 515).
 */
-void update_joystick() {
-  int xValue = analogRead(joyX);
-  int yValue = analogRead(joyY);
+void update_joystick(void)
+{
+  int xValue = analogRead(JOY_X);
+  int yValue = analogRead(JOY_Y);
   joystickPosX = xValue >= joystickInitialPosX - 15 && xValue <= joystickInitialPosX + 15 ? 0 : xValue > joystickInitialPosX + 15 ? 1 : -1;
   joystickPosY = yValue >= joystickInitialPosY - 15 && yValue <= joystickInitialPosY + 15 ? 0 : yValue > joystickInitialPosY + 15 ? 1 : -1;
   if (joystickPosX != joystickPrevPosX || joystickPosY != joystickPrevPosY) {
@@ -153,7 +149,13 @@ void update_joystick() {
   joystickPrevPosY = joystickPosY;
 }
 
-void joystick_position_changed() {
+/*
+   Called if the joystick's position does not match its previous (a move occurred).
+   Moves player position but contrains it within the bounds of the display. Registers
+   that the screen must be redrawn by setting `moved`.
+*/
+void joystick_position_changed(void)
+{
   player_x = constrain(player_x + joystickPosX, LCD_X_MIN, LCD_X_MAX);
   player_y = constrain(player_y + joystickPosY, LCD_Y_MIN, LCD_Y_MAX);
   moved = true;
@@ -168,12 +170,15 @@ void update_for_normal_gameplay(unsigned long mils)
 {
   // If it has been long enough since last obstacle move
   if (mils - time_last_obstacle_move > obstacle_move_interval) {
+    DEBUG("Moving obstacles");
+
     // Move obstacles in the current direction and eliminate any that are out of bounds
     move_obstacles(all_obstacles, obstacle_direction);
     remove_out_of_bounds(all_obstacles);
 
     // Spawn a new obstacle with probability 1/4
     if (rand() % 4 == 0) {
+      DEBUG("Spawning new obstacle");
       spawn_random_obstacle(all_obstacles, obstacle_direction);
     }
 
@@ -182,13 +187,20 @@ void update_for_normal_gameplay(unsigned long mils)
   }
   // If it has been long enough since last obstacle speed-up
   if (mils - time_last_speed_up > SPEED_UP_INTERVAL) {
+    DEBUG("Speeding up obstacles (move interval: decreasing from %d to %d)",
+          obstacle_move_interval, obstacle_move_interval - OBSTACLE_MOVE_INTERVAL_DECREASE);
+
     obstacle_move_interval -= OBSTACLE_MOVE_INTERVAL_DECREASE;
     time_last_speed_up = mils;
   }
   // If it has been long enough since last direction change event
   if (mils - time_last_dir_chg > DIR_CHG_INTERVAL) {
+    DEBUG("Possibly triggering direction change");
+
     // With probability 1/4, trigger a direction change
     if (rand() % 4 == 0) {
+      DEBUG("Direction change");
+
       pre_direction_change_flag = true;
       time_entered_pdc = mils;
     }
@@ -197,6 +209,8 @@ void update_for_normal_gameplay(unsigned long mils)
   // If a collision is detected given the current position of the player
   // and configuration of the obstacles, indicate that it is game over.
   if (collision_detected(all_obstacles, player_x, player_y)) {
+    DEBUG("Collision detected (player at (%d, %d))", player_x, player_y);
+
     game_over_flag = true;
     duration = millis() - start_time;
   }
@@ -225,16 +239,16 @@ state_t update_game_state(unsigned long mils)
     case SETUP:
       // If we've waited in SETUP long enough
       if (mils - time_entered_setup >= SETUP_WAIT_DURATION) {
+        DEBUG("Transition: SETUP -> NORMAL");
         reset_fsm_variables(mils);
-        Serial.println("TRANSITIONING TO NORMAL");
         next_state = NORMAL;
-        start_time = millis();
+        start_time = mils;
       }
       break;
 
     case GAME_OVER:
       if (restart_flag) {
-        Serial.println("TRANSITIONING TO SETUP");
+        DEBUG("Transition: GAME_OVER -> SETUP");
         next_state = SETUP;
         time_entered_setup = mils;
         display_setup();
@@ -247,13 +261,13 @@ state_t update_game_state(unsigned long mils)
 
       // Collision has occurred; game over.
       if (game_over_flag) {
-        Serial.println("TRANSITIONING TO GAME OVER");
+        DEBUG("Transition: NORMAL -> GAME_OVER");
         next_state = GAME_OVER;
         game_over_flag = false;
         display_game_over(duration);
         // It is time for a direction change
       } else if (pre_direction_change_flag) {
-        Serial.println("TRANSITIONING TO PRE DIRECTION");
+        DEBUG("Transition: NORMAL -> PRE_DIRECTION_CHANGE");
         next_state = PRE_DIRECTION_CHANGE;
         pre_direction_change_flag = false;
       }
@@ -264,7 +278,7 @@ state_t update_game_state(unsigned long mils)
 
       // It's possible a collision occurs during pre-direction change
       if (game_over_flag) {
-        Serial.println("TRANSITIONING TO GAME OVER");
+        DEBUG("Transition: PRE_DIRECTION_CHANGE -> GAME_OVER");
         next_state = GAME_OVER;
         game_over_flag = false;
         display_game_over(duration);
@@ -272,22 +286,28 @@ state_t update_game_state(unsigned long mils)
       // If it has been long enough since the pre direction change state was
       // entered, flip the direction of obstacle movement and transition to NORMAL.
       else if (mils - time_entered_pdc >= PRE_DIR_CHG_DURATION) {
-        Serial.println("TRANSITIONING TO NORMAL");
+        DEBUG("Transition: PRE_DIRECTION_CHANGE -> NORMAL");
         obstacle_direction = invert_direction(obstacle_direction);
         next_state = NORMAL;
       }
       break;
 
     default:
-      error("invalid state in update_game_state");
+      HALT_WITH_ERROR("invalid current state: %d", current_state);
       break;
   }
 
   return next_state;
 }
 
-void buttonPressInterrupt(void){
-  if(current_state == GAME_OVER){
+/*
+   Interrupt handler for button presses on the joystick. If currently
+   in a game over state, the game is restarted. Otherwise, presses are ignored.
+*/
+void buttonPressInterrupt(void)
+{
+  if (current_state == GAME_OVER) {
+    DEBUG("Joystick button pressed in GAME_OVER: resetting");
     restart_flag = true;
   }
 }
