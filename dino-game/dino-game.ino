@@ -71,8 +71,8 @@ void setup()
 
   srand(time(NULL));  // Set the random seed
 
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
   pinMode(LED_PIN, OUTPUT);
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), buttonPressInterrupt, RISING);
 
   all_obstacles = new LinkedPointerList<obstacle_t>();
@@ -133,9 +133,11 @@ void reset_fsm_variables(unsigned long mils) {
 }
 
 /*
-  Update Joystick position and map the joysticks value (0, 1023) to (-1, 1) where it is only 0 if at center position (500, 515)
+  Update Joystick position and map the joysticks value (0, 1023) to
+  (-1, 1) where it is only 0 if at center position (500, 515).
 */
-void update_joystick() {
+void update_joystick(void)
+{
   int xValue = analogRead(JOY_X);
   int yValue = analogRead(JOY_Y);
   joystickPosX = xValue >= joystickInitialPosX - 15 && xValue <= joystickInitialPosX + 15 ? 0 : xValue > joystickInitialPosX + 15 ? 1 : -1;
@@ -147,7 +149,13 @@ void update_joystick() {
   joystickPrevPosY = joystickPosY;
 }
 
-void joystick_position_changed() {
+/*
+   Called if the joystick's position does not match its previous (a move occurred).
+   Moves player position but contrains it within the bounds of the display. Registers
+   that the screen must be redrawn by setting `moved`.
+*/
+void joystick_position_changed(void)
+{
   player_x = constrain(player_x + joystickPosX, LCD_X_MIN, LCD_X_MAX);
   player_y = constrain(player_y + joystickPosY, LCD_Y_MIN, LCD_Y_MAX);
   moved = true;

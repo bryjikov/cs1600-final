@@ -6,7 +6,7 @@
 // Uncomment this to enable debug logging
 #define DEBUG_LOGGING
 
-#define LOG_BUFFER_SIZE 64
+#define LOG_BUFFER_SIZE 128
 static char print_buffer[LOG_BUFFER_SIZE];
 static char alt_buffer[LOG_BUFFER_SIZE];
 

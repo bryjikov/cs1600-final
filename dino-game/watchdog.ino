@@ -1,17 +1,17 @@
-#include <avr/wdt.h>
 /*
    watchdog.ino
    Watchdog timer.
 */
+#include <avr/wdt.h>
 
 /*
-   disables the watchdog 
+   disables the watchdog
 */
 void stop_watchdog(void)
 {
   DEBUG("Disabling watchdog timer");
-  wdt_disable(); 
-  delay(3000); //idk the internet recommends this 
+  wdt_disable();
+  delay(3000); //idk the internet recommends this
 }
 
 /*
@@ -21,7 +21,7 @@ void stop_watchdog(void)
 void setup_watchdog(void)
 {
   DEBUG("Enabling watchdog timer");
-  wdt_enable(WDTO_4S); //4 second timeout. idk if we really need this 
+  wdt_enable(WDTO_4S); //4 second timeout. idk if we really need this
 }
 
 /*
@@ -29,6 +29,5 @@ void setup_watchdog(void)
 */
 void pet_watchdog(void)
 {
-  DEBUG("Petting watchdog");
   wdt_reset();
 }
