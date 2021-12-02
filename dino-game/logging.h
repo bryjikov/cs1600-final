@@ -64,5 +64,5 @@ void debug_underlying(char *func, char *format, ...)
   serial_printf("[DEBUG] %s: %s\n", func, buf);
 }
 #else
-void debug_underlying(char *format, ...) {}
+void debug_underlying(char *func, char *format, ...) {}
 #endif
