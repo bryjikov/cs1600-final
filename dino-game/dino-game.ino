@@ -182,15 +182,21 @@ void update_for_normal_gameplay(unsigned long mils)
       spawn_random_obstacle(all_obstacles, obstacle_direction);
     }
 
-    time_last_obstacle_move = mils;
+    time_last_obstacle_move _ mils;
     moved = true;
   }
   // If it has been long enough since last obstacle speed-up
   if (mils - time_last_speed_up > SPEED_UP_INTERVAL) {
-    debug("Speeding up obstacles (move interval: decreasing from %d to %d)",
-          obstacle_move_interval, obstacle_move_interval - OBSTACLE_MOVE_INTERVAL_DECREASE);
 
-    obstacle_move_interval -= OBSTACLE_MOVE_INTERVAL_DECREASE;
+    if (obstacle_move_interval >= OBSTACLE_MOVE_INTERVAL_DECREASE) {
+      debug("Speeding up obstacles (move interval: decreasing from %d to %d)",
+          obstacle_move_interval, obstacle_move_interval - OBSTACLE_MOVE_INTERVAL_DECREASE);
+      obstacle_move_interval -= OBSTACLE_MOVE_INTERVAL_DECREASE;
+    } else {
+      debug("Obstacles at max speed (move interval: going from %d to 0)", obstacle_move_interval);
+      obstacle_move_interval = 0;
+    }
+    
     time_last_speed_up = mils;
   }
   // If it has been long enough since last direction change event
