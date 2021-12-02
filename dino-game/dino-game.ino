@@ -60,6 +60,8 @@ volatile unsigned long start_time;                /* The time (in milis) when th
 volatile unsigned long duration;                  /* The total time that the game lasted */
 LinkedPointerList<obstacle_t> *all_obstacles;     /* List containing all currently active obstacles */
 
+volatile bool testing;
+
 typedef enum
 {
   /* All FSM variables should be initialized */
@@ -108,6 +110,9 @@ void setup()
   current_state = SETUP;
   time_entered_setup = millis();
   display_setup();
+
+  /* for testing */
+  testing = false;
 }
 
 void loop()
@@ -173,7 +178,7 @@ void update_for_normal_gameplay(unsigned long mils)
     remove_out_of_bounds(all_obstacles);
 
     // Spawn a new obstacle with probability 1/4
-    if (rand() % 4 == 0) {
+    if (rand() % 4 == 0 || testing) {
       spawn_random_obstacle(all_obstacles, obstacle_direction);
     }
 
@@ -188,7 +193,7 @@ void update_for_normal_gameplay(unsigned long mils)
   // If it has been long enough since last direction change event
   if (mils - time_last_dir_chg > DIR_CHG_INTERVAL) {
     // With probability 1/4, trigger a direction change
-    if (rand() % 4 == 0) {
+    if (rand() % 4 == 0  || testing) {
       pre_direction_change_flag = true;
       time_entered_pdc = mils;
     }
