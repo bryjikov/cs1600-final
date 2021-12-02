@@ -14,7 +14,7 @@ direction_t invert_direction(direction_t dir)
     case RIGHT:
       return LEFT;
     default:
-      error("invert_direction: invalid direction");
+      halt_with_error("invalid direction: %d", dir);
   }
 }
 
@@ -35,7 +35,7 @@ void move_obstacles(LinkedPointerList<obstacle_t> *obstacles, direction_t dir)
         obs->x += 1;
         break;
       default:
-        error("invalid direction in move_obstacles");
+        halt_with_error("invalid direction: %d", dir);
     }
   }
 }
@@ -89,7 +89,7 @@ void spawn_random_obstacle(LinkedPointerList<obstacle_t> *obstacles, direction_t
       x = LCD_X_MIN;
       break;
     default:
-      error("invalid direction in spawn_random_obstacle");
+      halt_with_error("invalid direction: %d", dir);
   }
 
   // Add the new obstacle

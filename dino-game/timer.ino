@@ -3,8 +3,9 @@
    Timer-related functionality.
 */
 
-void timer_setup(){
-  //temporarily disable interrupts 
+void timer_setup() {
+  debug("Setting up timer for LED");
+  //temporarily disable interrupts
   noInterrupts();
 
   //initialize registers and counters to 0
@@ -12,7 +13,7 @@ void timer_setup(){
   TCCR2B = 0;
   TCNT2 = 0;
 
-  //set count at for interrupt to occur, translates to 1kH frequency w/128 prescaler 
+  //set count at for interrupt to occur, translates to 1kH frequency w/128 prescaler
   //formula: (16 * 10^6) / (desired frequency * prescaler) - 1
   OCR2A = 124;
 
@@ -20,17 +21,17 @@ void timer_setup(){
   TCCR2A |= (1 << WGM21);
 
   //set prescaler
-  TCCR2B |= (1 << CS22) | (1 << CS20);  
+  TCCR2B |= (1 << CS22) | (1 << CS20);
 
-  //enable timer interupt 
+  //enable timer interupt
   TIMSK2 |= (1 << OCIE2A);
 
-  //re-enable interrupts 
+  //re-enable interrupts
   interrupts();
 }
 
 
-ISR(TIMER2_COMPA_vect){
+ISR(TIMER2_COMPA_vect) {
   //timer interrupt just calls updateLED
   updateLED();
 }
