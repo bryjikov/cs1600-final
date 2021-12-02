@@ -38,7 +38,7 @@ byte obstacle[8] = {
 */
 void initialize_lcd(void)
 {
-  DEBUG("Initializing LCD display (%d x %d)", LCD_X_DIM, LCD_Y_DIM);
+  debug("Initializing LCD display (%d x %d)", LCD_X_DIM, LCD_Y_DIM);
 #ifdef BIG_LCD
   lcd.init();
   lcd.backlight();

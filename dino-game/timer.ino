@@ -4,7 +4,7 @@
 */
 
 void timer_setup() {
-  DEBUG("Setting up timer for LED");
+  debug("Setting up timer for LED");
   //temporarily disable interrupts
   noInterrupts();
 

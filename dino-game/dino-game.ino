@@ -170,7 +170,7 @@ void update_for_normal_gameplay(unsigned long mils)
 {
   // If it has been long enough since last obstacle move
   if (mils - time_last_obstacle_move > obstacle_move_interval) {
-    DEBUG("Moving obstacles");
+    debug("Moving obstacles");
 
     // Move obstacles in the current direction and eliminate any that are out of bounds
     move_obstacles(all_obstacles, obstacle_direction);
@@ -178,7 +178,7 @@ void update_for_normal_gameplay(unsigned long mils)
 
     // Spawn a new obstacle with probability 1/4
     if (rand() % 4 == 0) {
-      DEBUG("Spawning new obstacle");
+      debug("Spawning new obstacle");
       spawn_random_obstacle(all_obstacles, obstacle_direction);
     }
 
@@ -187,7 +187,7 @@ void update_for_normal_gameplay(unsigned long mils)
   }
   // If it has been long enough since last obstacle speed-up
   if (mils - time_last_speed_up > SPEED_UP_INTERVAL) {
-    DEBUG("Speeding up obstacles (move interval: decreasing from %d to %d)",
+    debug("Speeding up obstacles (move interval: decreasing from %d to %d)",
           obstacle_move_interval, obstacle_move_interval - OBSTACLE_MOVE_INTERVAL_DECREASE);
 
     obstacle_move_interval -= OBSTACLE_MOVE_INTERVAL_DECREASE;
@@ -195,11 +195,11 @@ void update_for_normal_gameplay(unsigned long mils)
   }
   // If it has been long enough since last direction change event
   if (mils - time_last_dir_chg > DIR_CHG_INTERVAL) {
-    DEBUG("Possibly triggering direction change");
+    debug("Possibly triggering direction change");
 
     // With probability 1/4, trigger a direction change
     if (rand() % 4 == 0) {
-      DEBUG("Direction change");
+      debug("Direction change");
 
       pre_direction_change_flag = true;
       time_entered_pdc = mils;
@@ -209,7 +209,7 @@ void update_for_normal_gameplay(unsigned long mils)
   // If a collision is detected given the current position of the player
   // and configuration of the obstacles, indicate that it is game over.
   if (collision_detected(all_obstacles, player_x, player_y)) {
-    DEBUG("Collision detected (player at (%d, %d))", player_x, player_y);
+    debug("Collision detected (player at (%d, %d))", player_x, player_y);
 
     game_over_flag = true;
     duration = millis() - start_time;
@@ -239,7 +239,7 @@ state_t update_game_state(unsigned long mils)
     case SETUP:
       // If we've waited in SETUP long enough
       if (mils - time_entered_setup >= SETUP_WAIT_DURATION) {
-        DEBUG("Transition: SETUP -> NORMAL");
+        debug("Transition: SETUP -> NORMAL");
         reset_fsm_variables(mils);
         next_state = NORMAL;
         start_time = mils;
@@ -248,7 +248,7 @@ state_t update_game_state(unsigned long mils)
 
     case GAME_OVER:
       if (restart_flag) {
-        DEBUG("Transition: GAME_OVER -> SETUP");
+        debug("Transition: GAME_OVER -> SETUP");
         next_state = SETUP;
         time_entered_setup = mils;
         display_setup();
@@ -261,13 +261,13 @@ state_t update_game_state(unsigned long mils)
 
       // Collision has occurred; game over.
       if (game_over_flag) {
-        DEBUG("Transition: NORMAL -> GAME_OVER");
+        debug("Transition: NORMAL -> GAME_OVER");
         next_state = GAME_OVER;
         game_over_flag = false;
         display_game_over(duration);
         // It is time for a direction change
       } else if (pre_direction_change_flag) {
-        DEBUG("Transition: NORMAL -> PRE_DIRECTION_CHANGE");
+        debug("Transition: NORMAL -> PRE_DIRECTION_CHANGE");
         next_state = PRE_DIRECTION_CHANGE;
         pre_direction_change_flag = false;
       }
@@ -278,7 +278,7 @@ state_t update_game_state(unsigned long mils)
 
       // It's possible a collision occurs during pre-direction change
       if (game_over_flag) {
-        DEBUG("Transition: PRE_DIRECTION_CHANGE -> GAME_OVER");
+        debug("Transition: PRE_DIRECTION_CHANGE -> GAME_OVER");
         next_state = GAME_OVER;
         game_over_flag = false;
         display_game_over(duration);
@@ -286,14 +286,14 @@ state_t update_game_state(unsigned long mils)
       // If it has been long enough since the pre direction change state was
       // entered, flip the direction of obstacle movement and transition to NORMAL.
       else if (mils - time_entered_pdc >= PRE_DIR_CHG_DURATION) {
-        DEBUG("Transition: PRE_DIRECTION_CHANGE -> NORMAL");
+        debug("Transition: PRE_DIRECTION_CHANGE -> NORMAL");
         obstacle_direction = invert_direction(obstacle_direction);
         next_state = NORMAL;
       }
       break;
 
     default:
-      HALT_WITH_ERROR("invalid current state: %d", current_state);
+      halt_with_error("invalid current state: %d", current_state);
       break;
   }
 
@@ -307,7 +307,7 @@ state_t update_game_state(unsigned long mils)
 void buttonPressInterrupt(void)
 {
   if (current_state == GAME_OVER) {
-    DEBUG("Joystick button pressed in GAME_OVER: resetting");
+    debug("Joystick button pressed in GAME_OVER: resetting");
     restart_flag = true;
   }
 }
