@@ -188,7 +188,7 @@ void update_for_normal_gameplay(unsigned long mils)
       spawn_random_obstacle(all_obstacles, obstacle_direction);
     }
 
-    time_last_obstacle_move _ mils;
+    time_last_obstacle_move = mils;
     moved = true;
   }
   // If it has been long enough since last obstacle speed-up
