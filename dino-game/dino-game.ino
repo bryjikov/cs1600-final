@@ -135,6 +135,7 @@ void reset_fsm_variables(unsigned long mils) {
   player_y = LCD_Y_MAX;
   obstacle_direction = LEFT;
   moved = true;
+  free_all(all_obstacles);
   all_obstacles->clear();
 }
 
