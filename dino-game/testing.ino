@@ -29,10 +29,18 @@ typedef struct state_vars{
   state_t current_state;                   /* state of the fsm */
 }state_vars_t;
 
+//testing variables:
+LinkedPointerList<obstacle_t> *test_obstacles; /* a list to initially set the obstacles for the test */
+LinkedPointerList<obstacle_t> *test_exp_obstacles; /* a list containing the expected obstacles after the test */
+state_vars_t input_states[1] = {{false,false,0,false,100,50,95,90,0,1,1,1,false,0,0,NULL,NORMAL}}; /* values of global variables to start a test */
+state_vars_t output_states[1] = {{true,false,0,false,100,50,95,90,0,1,1,1,false,0,0,NULL,GAME_OVER}}; /* expected values of global variables after the test */
+unsigned long test_millis[1] = {100}; /* fake times for the test to take place */
+int num_tests = 1; /* number of tests to run */
+
 bool run_one_test(state_vars_t start_state, state_vars_t expected_state, unsigned long current_millis);
 
 bool test_list(LinkedPointerList<obstacle_t> *actual_obstacles, LinkedPointerList<obstacle_t> *expected_obstacles){
-  if(actual_obstacles.size() != expected_obstacles.size()){
+  if(actual_obstacles->size() != expected_obstacles->size()){
     return false;
   }
   
@@ -91,14 +99,6 @@ bool run_one_test(state_vars_t start_state, state_vars_t expected_state, unsigne
    return test_passed;                      
 }
 
-//testing variables:
-LinkedPointerList<obstacle_t> *test_obstacles; /* a list to initially set the obstacles for the test */
-LinkedPointerList<obstacle_t> *test_exp_obstacles; /* a list containing the expected obstacles after the test */
-state_vars_t input_states[1] = {{false,false,0,false,100,50,95,90,0,1,1,1,false,0,0,NULL,NORMAL}}; /* values of global variables to start a test */
-state_vars_t output_states[1] = {{true,false,0,false,100,50,95,90,0,1,1,1,false,0,0,NULL,GAME_OVER}}; /* expected values of global variables after the test */
-unsigned long test_millis[1] = {100}; /* fake times for the test to take place */
-int num_tests = 1; /* number of tests to run */
-
 void add_objects(int test_num){
   if(test_num == 0){
     //creates a collision with player 
@@ -109,20 +109,39 @@ void add_objects(int test_num){
   }
 }
 
+
+void remove_objects(void){
+  obstacle_t *o;
+  for (int i = 0; i < test_obstacles->size(); i++) {
+    o = test_obstacles->get(i);
+    free(o);
+  }
+  for (int i = 0; i < test_exp_obstacles->size(); i++) {
+    o = test_exp_obstacles->get(i);
+    free(o);
+  }
+}
+
 void run_all_tests(){
   test_obstacles = new LinkedPointerList<obstacle_t>();
   test_exp_obstacles = new LinkedPointerList<obstacle_t>();
+  
   for(int i = 0; i < num_tests; i++){
+    //setup the test
     state_vars_t input_state = input_states[i];
     state_vars_t output_state = output_states[i];
     add_objects(i);
     input_state.all_obstacles = test_obstacles;
-    
+    output_state.all_obstacles = test_exp_obstacles;
+    //run the test
     if(!run_one_test(input_state, output_state, test_millis[i])){
       Serial.println("failed a test!"); 
     }
+    //clear the test 
+    remove_objects();
     test_obstacles->clear();
     test_exp_obstacles->clear();
   }
+  
   Serial.println("Done with tests!");
 }
