@@ -224,7 +224,7 @@ void update_for_normal_gameplay(unsigned long mils)
     debug("Collision detected (player at (%d, %d))", player_x, player_y);
 
     game_over_flag = true;
-    duration = millis() - start_time;
+    duration = mils- start_time;
   }
   update_joystick();
 

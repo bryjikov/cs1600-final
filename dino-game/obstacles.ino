@@ -130,7 +130,7 @@ void display_obstacles(LinkedPointerList<obstacle_t> *obstacles)
 void free_all(LinkedPointerList<obstacle_t> *obstacles){
   obstacle_t *o;
   for(int i = 0; i < obstacles->size(); i++){
-    o = obstacles.get(i);
+    o = obstacles->get(i);
     free(o);
   }
 }
