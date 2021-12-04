@@ -78,11 +78,11 @@ void spawn_random_obstacle(LinkedPointerList<obstacle_t> *obstacles, direction_t
 {
   uint8_t x, y;
 
-  #ifdef TESTING
+#ifdef TESTING
   y = 0;  // Always spawn at y=0 under TESTING mode
-  #else 
+#else
   y = rand() % (LCD_Y_MAX + 1);
-  #endif
+#endif
 
   // If obstacles are moving left, spawn on the right (LCD_X_MAX)
   // If obstacles are moving right, spawn on the left (LCD_X_MIN)
@@ -130,22 +130,22 @@ void display_obstacles(LinkedPointerList<obstacle_t> *obstacles)
 }
 
 /*
- * Frees every obstacle in the given list, so that the list can then be
- * cleared without leaking memory.
- */
+   Frees every obstacle in the given list, so that the list can then be
+   cleared without leaking memory.
+*/
 void free_all(LinkedPointerList<obstacle_t> *obstacles)
 {
   obstacle_t *o;
-  for(int i = 0; i < obstacles->size(); i++){
+  for (int i = 0; i < obstacles->size(); i++) {
     o = obstacles->get(i);
     free(o);
   }
 }
 
-/**
- * Allocates a new obstacle and adds it onto the given obstacle list. Returns
- * a pointer to the created obstacle.
- */
+/*
+   Allocates a new obstacle and adds it onto the given obstacle list. Returns
+   a pointer to the created obstacle.
+*/
 obstacle_t *create_obstacle_at(uint8_t x, uint8_t y, LinkedPointerList<obstacle_t> *obstacles)
 {
   obstacle_t *obs = (obstacle_t *)malloc(sizeof(obstacle_t));

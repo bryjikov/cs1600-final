@@ -1,15 +1,15 @@
 /*
- * Testing framework - is currently a little gross 
- * 
- * To add a test, first add a struct with the desired start and expected end values of all the global variables into 
- * input_states and output_states (expect for all_obstacles, which you should set to NULL). Also add a millis for this 
- * test to take place in test_millis. Increase the size of all of the arrays and update num_tests.
- * 
- * You will also need to setup your obstacle lists as desired. Add another "if" case to the add_objects function for the
- * index of your test in the test arrays. Put obstacles in test_obstacles and test_exp_onbstacles as desired.
- */
+   Testing framework - is currently a little gross
 
-typedef struct state_vars{
+   To add a test, first add a struct with the desired start and expected end values of all the global variables into
+   input_states and output_states (expect for all_obstacles, which you should set to NULL). Also add a millis for this
+   test to take place in test_millis. Increase the size of all of the arrays and update num_tests.
+
+   You will also need to setup your obstacle lists as desired. Add another "if" case to the add_objects function for the
+   index of your test in the test arrays. Put obstacles in test_obstacles and test_exp_onbstacles as desired.
+*/
+
+typedef struct state_vars {
   bool game_over_flag;                     /* Set when the player has collided with an obstacle */
   bool pre_direction_change_flag;          /* Set when a direction change is upcoming and user should be warned */
   unsigned long time_entered_pdc;          /* Time (ms) at which the pre direction change state was entered */
@@ -27,33 +27,35 @@ typedef struct state_vars{
   unsigned long duration;                  /* The total time that the game lasted */
   LinkedPointerList<obstacle_t> *all_obstacles;     /* List containing all currently active obstacles */
   state_t current_state;                   /* state of the fsm */
-}state_vars_t;
+} state_vars_t;
 
 //testing variables:
 LinkedPointerList<obstacle_t> *test_obstacles; /* a list to initially set the obstacles for the test */
 LinkedPointerList<obstacle_t> *test_exp_obstacles; /* a list containing the expected obstacles after the test */
 // index 0 = NORMAL -> GAME_OVER
 // index 1 = NORMAL -> PRE_DIRECTION_CHANGE
-state_vars_t input_states[2] = {{false,false,0,false,100,50,95,90,0,1,1,1,false,0,0,NULL,NORMAL}, 
-                                {false,false,0,false,1000,29500,19000,29000,0,1,1,1,false,0,0,NULL,NORMAL}}; /* values of global variables to start a test */
-state_vars_t output_states[2] = {{true,false,0,false,100,50,95,90,0,1,1,1,false,0,100,NULL,GAME_OVER},
-                                 {false,false,30000,false,1000,29500,30000,29000,0,1,1,1,false,0,0,NULL,PRE_DIRECTION_CHANGE}}; /* expected values of global variables after the test */
+state_vars_t input_states[2] = {{false, false, 0, false, 100, 50, 95, 90, 0, 1, 1, 1, false, 0, 0, NULL, NORMAL},
+  {false, false, 0, false, 1000, 29500, 19000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, NORMAL}
+}; /* values of global variables to start a test */
+state_vars_t output_states[2] = {{true, false, 0, false, 100, 50, 95, 90, 0, 1, 1, 1, false, 0, 100, NULL, GAME_OVER},
+  {false, false, 30000, false, 1000, 29500, 30000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE}
+}; /* expected values of global variables after the test */
 unsigned long test_millis[2] = {100, 30000}; /* fake times for the test to take place */
 int num_tests = 1; /* number of tests to run */
 
 bool run_one_test(state_vars_t start_state, state_vars_t expected_state, unsigned long current_millis);
 
-bool test_list(LinkedPointerList<obstacle_t> *actual_obstacles, LinkedPointerList<obstacle_t> *expected_obstacles){
-  if(actual_obstacles->size() != expected_obstacles->size()){
+bool test_list(LinkedPointerList<obstacle_t> *actual_obstacles, LinkedPointerList<obstacle_t> *expected_obstacles) {
+  if (actual_obstacles->size() != expected_obstacles->size()) {
     return false;
   }
-  
+
   obstacle_t* a;
   obstacle_t* e;
   for (int i = 0; i < actual_obstacles->size(); i++) {
     a = actual_obstacles->get(i);
     e = expected_obstacles->get(i);
-    if(a->x != e->x || a->y != e->y){
+    if (a->x != e->x || a->y != e->y) {
       return false;
     }
   }
@@ -61,57 +63,57 @@ bool test_list(LinkedPointerList<obstacle_t> *actual_obstacles, LinkedPointerLis
   return true;
 }
 
-bool run_one_test(state_vars_t start_state, state_vars_t expected_state, unsigned long current_millis){
-  //set global variables to match desired input 
+bool run_one_test(state_vars_t start_state, state_vars_t expected_state, unsigned long current_millis) {
+  //set global variables to match desired input
   game_over_flag = start_state.game_over_flag;
   pre_direction_change_flag = start_state.pre_direction_change_flag;
-  time_entered_pdc = start_state.time_entered_pdc;         
-  restart_flag = start_state.restart_flag;                       
-  obstacle_move_interval = start_state.obstacle_move_interval;        
-  time_last_obstacle_move = start_state.time_last_obstacle_move;   
-  time_last_dir_chg = start_state.time_last_dir_chg;        
-  time_last_speed_up = start_state.time_last_speed_up;        
-  time_entered_setup = start_state.time_entered_setup;       
-  obstacle_direction = start_state.obstacle_direction;          
-  player_x = start_state.player_x;                           
-  player_y = start_state.player_y;                            
-  moved = start_state.moved;                             
-  start_time = start_state.start_time;               
-  duration = start_state.duration;                  
-  all_obstacles = start_state.all_obstacles;  
+  time_entered_pdc = start_state.time_entered_pdc;
+  restart_flag = start_state.restart_flag;
+  obstacle_move_interval = start_state.obstacle_move_interval;
+  time_last_obstacle_move = start_state.time_last_obstacle_move;
+  time_last_dir_chg = start_state.time_last_dir_chg;
+  time_last_speed_up = start_state.time_last_speed_up;
+  time_entered_setup = start_state.time_entered_setup;
+  obstacle_direction = start_state.obstacle_direction;
+  player_x = start_state.player_x;
+  player_y = start_state.player_y;
+  moved = start_state.moved;
+  start_time = start_state.start_time;
+  duration = start_state.duration;
+  all_obstacles = start_state.all_obstacles;
   current_state = start_state.current_state;
   // run fsm
-  state_t end_state = update_game_state(current_millis);   
-  //check if end state macthes expected 
-  bool test_passed = (end_state == expected_state.current_state and  
+  state_t end_state = update_game_state(current_millis);
+  //check if end state macthes expected
+  bool test_passed = (end_state == expected_state.current_state and
                       game_over_flag == expected_state.game_over_flag and
                       pre_direction_change_flag == expected_state.pre_direction_change_flag and
-                      time_entered_pdc == expected_state.time_entered_pdc and         
-                      restart_flag == expected_state.restart_flag and                       
-                      obstacle_move_interval == expected_state.obstacle_move_interval and        
-                      time_last_obstacle_move == expected_state.time_last_obstacle_move and   
-                      time_last_dir_chg == expected_state.time_last_dir_chg and        
-                      time_last_speed_up == expected_state.time_last_speed_up and        
-                      time_entered_setup == expected_state.time_entered_setup and       
-                      obstacle_direction == expected_state.obstacle_direction and          
-                      player_x == expected_state.player_x and                           
-                      player_y == expected_state.player_y and                            
-                      moved == expected_state.moved and                             
-                      start_time == expected_state.start_time and               
+                      time_entered_pdc == expected_state.time_entered_pdc and
+                      restart_flag == expected_state.restart_flag and
+                      obstacle_move_interval == expected_state.obstacle_move_interval and
+                      time_last_obstacle_move == expected_state.time_last_obstacle_move and
+                      time_last_dir_chg == expected_state.time_last_dir_chg and
+                      time_last_speed_up == expected_state.time_last_speed_up and
+                      time_entered_setup == expected_state.time_entered_setup and
+                      obstacle_direction == expected_state.obstacle_direction and
+                      player_x == expected_state.player_x and
+                      player_y == expected_state.player_y and
+                      moved == expected_state.moved and
+                      start_time == expected_state.start_time and
                       duration == expected_state.duration);
-   test_passed = (test_passed and test_list(all_obstacles, expected_state.all_obstacles));
-   return test_passed;                      
+  test_passed = (test_passed and test_list(all_obstacles, expected_state.all_obstacles));
+  return test_passed;
 }
 
-void add_objects(int test_num){
-  if(test_num == 0){
-    //creates a collision with player 
+void add_objects(int test_num) {
+  if (test_num == 0) {
+    //creates a collision with player
     create_obstacle_at(1, 1, test_obstacles);
   }
 }
 
 
-void remove_objects(void){
+void remove_objects(void) {
   obstacle_t *o;
   for (int i = 0; i < test_obstacles->size(); i++) {
     o = test_obstacles->get(i);
@@ -123,11 +125,11 @@ void remove_objects(void){
   }
 }
 
-void run_all_tests(){
+void run_all_tests() {
   test_obstacles = new LinkedPointerList<obstacle_t>();
   test_exp_obstacles = new LinkedPointerList<obstacle_t>();
-  
-  for(int i = 0; i < num_tests; i++){
+
+  for (int i = 0; i < num_tests; i++) {
     //setup the test
     state_vars_t input_state = input_states[i];
     state_vars_t output_state = output_states[i];
@@ -135,14 +137,14 @@ void run_all_tests(){
     input_state.all_obstacles = test_obstacles;
     output_state.all_obstacles = test_exp_obstacles;
     //run the test
-    if(!run_one_test(input_state, output_state, test_millis[i])){
-      Serial.println("failed a test!"); 
+    if (!run_one_test(input_state, output_state, test_millis[i])) {
+      Serial.println("failed a test!");
     }
-    //clear the test 
+    //clear the test
     remove_objects();
     test_obstacles->clear();
     test_exp_obstacles->clear();
   }
-  
+
   Serial.println("Done with tests!");
 }

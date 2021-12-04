@@ -72,9 +72,9 @@ void setup()
 {
   Serial.begin(9600);
 
-  #ifdef TESTING
+#ifdef TESTING
   run_all_tests();
-  #else
+#else
 
   srand(time(NULL));  // Set the random seed
 
@@ -99,7 +99,7 @@ void setup()
   time_entered_setup = millis();
   display_setup();
 
-  #endif
+#endif
 }
 
 void loop()
@@ -188,11 +188,11 @@ void update_for_normal_gameplay(unsigned long mils)
 
     // Spawn a new obstacle with probability 1/4 (under TESTING,
     // always spawn a new obstacle)
-    #ifdef TESTING
+#ifdef TESTING
     if (true) {
-    #else
+#else
     if (rand() % 4 == 0) {
-    #endif
+#endif
       debug("Spawning new obstacle");
       spawn_random_obstacle(all_obstacles, obstacle_direction);
     }
@@ -205,26 +205,26 @@ void update_for_normal_gameplay(unsigned long mils)
 
     if (obstacle_move_interval >= OBSTACLE_MOVE_INTERVAL_DECREASE) {
       debug("Speeding up obstacles (move interval: decreasing from %d to %d)",
-          obstacle_move_interval, obstacle_move_interval - OBSTACLE_MOVE_INTERVAL_DECREASE);
+            obstacle_move_interval, obstacle_move_interval - OBSTACLE_MOVE_INTERVAL_DECREASE);
       obstacle_move_interval -= OBSTACLE_MOVE_INTERVAL_DECREASE;
     } else {
       debug("Obstacles at max speed (move interval: going from %d to 0)", obstacle_move_interval);
       obstacle_move_interval = 0;
     }
-    
+
     time_last_speed_up = mils;
   }
   // If it has been long enough since last direction change event
   if (mils - time_last_dir_chg > DIR_CHG_INTERVAL) {
     debug("Possibly triggering direction change");
 
-    // With probability 1/4, trigger a direction change (under 
+    // With probability 1/4, trigger a direction change (under
     // TESTING, always cause direction change).
-    #ifdef TESTING
+#ifdef TESTING
     if (true) {
-    #else
+#else
     if (rand() % 4 == 0) {
-    #endif
+#endif
       debug("Direction change");
       pre_direction_change_flag = true;
       time_entered_pdc = mils;
