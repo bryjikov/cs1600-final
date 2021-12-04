@@ -35,14 +35,20 @@ LinkedPointerList<obstacle_t> *test_exp_obstacles; /* a list containing the expe
 // index 0 = NORMAL -> GAME_OVER
 // index 1 = NORMAL -> PRE_DIRECTION_CHANGE
 // index 2 = PRE_DIRECTION_CHANGE -> PRE_DIRECTION_CHANGE (also with obstacle speedup)
-state_vars_t input_states[3] = {{false,false,0,false,100,50,95,90,0,1,1,1,false,0,0,NULL,NORMAL}, 
+// index 3 = PRE_DIRECTION_CHANGE -> NORMAL (also with obstacle move)
+/* values of global variables to start a test */
+state_vars_t input_states[4] = {{false,false,0,false,100,50,95,90,0,1,1,1,false,0,0,NULL,NORMAL}, 
                                 {false,false,0,false,1000,29500,19000,29000,0,1,1,1,false,0,0,NULL,NORMAL},
-                                {false,false,29000,false,1000,29500,29000,26000,0,1,1,1,false,0,0,NULL,PRE_DIRECTION_CHANGE}}; /* values of global variables to start a test */
-state_vars_t output_states[3] = {{true,false,0,false,100,50,95,90,0,1,1,1,false,0,100,NULL,GAME_OVER},
+                                {false,false,29000,false,1000,29500,29000,26000,0,1,1,1,false,0,0,NULL,PRE_DIRECTION_CHANGE},
+                                {false,false,29000,false,30,31900,29000,28000,0,1,1,1,false,0,0,NULL,PRE_DIRECTION_CHANGE}}; 
+/* expected values of global variables after the test */
+state_vars_t output_states[4] = {{true,false,0,false,100,50,95,90,0,1,1,1,false,0,100,NULL,GAME_OVER},
                                  {false,false,30000,false,1000,29500,30000,29000,0,1,1,1,false,0,0,NULL,PRE_DIRECTION_CHANGE},
-                                 {false,false,29000,false,950,29500,29000,30000,0,1,1,1,false,0,0,NULL,PRE_DIRECTION_CHANGE}}; /* expected values of global variables after the test */
-unsigned long test_millis[3] = {100, 30000, 30000}; /* fake times for the test to take place */
-int num_tests = 3; /* number of tests to run */
+                                 {false,false,29000,false,950,29500,29000,30000,0,1,1,1,false,0,0,NULL,PRE_DIRECTION_CHANGE},
+                                 {false,false,29000,false,0,32000,29000,28000,0,0,1,1,true,0,0,NULL,NORMAL}};
+/* fake times for the test to take place */                                 
+unsigned long test_millis[4] = {100, 30000, 30000, 32000}; 
+int num_tests = 4; /* number of tests to run */
 
 bool run_one_test(state_vars_t start_state, state_vars_t expected_state, unsigned long current_millis);
 
@@ -111,6 +117,12 @@ void add_objects(int test_num) {
     //creates a collision with player
     create_obstacle_at(1, 1, test_obstacles);
     create_obstacle_at(1, 1, test_exp_obstacles);
+  }
+  if (test_num == 3) {
+    //creates a collision with player
+    create_obstacle_at(5, 1, test_obstacles);
+    create_obstacle_at(6, 1, test_exp_obstacles);
+    create_obstacle_at(0, 0, test_exp_obstacles);
   }
 }
 
