@@ -110,6 +110,7 @@ void add_objects(int test_num) {
   if (test_num == 0) {
     //creates a collision with player
     create_obstacle_at(1, 1, test_obstacles);
+    create_obstacle_at(1, 1, test_exp_obstacles);
   }
 }
 
