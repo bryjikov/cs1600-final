@@ -8,6 +8,9 @@
 #include "led.h"
 #include "logging.h"
 
+// Uncomment this for test mode
+#define TESTING
+
 #ifdef BIG_LCD
 LiquidCrystal_I2C lcd(0x27, LCD_X_DIM, LCD_Y_DIM);
 #else
@@ -40,9 +43,6 @@ volatile unsigned long start_time;                /* The time (in milis) when th
 volatile unsigned long duration;                  /* The total time that the game lasted */
 LinkedPointerList<obstacle_t> *all_obstacles;     /* List containing all currently active obstacles */
 
-
-volatile bool testing;
-
 /* Joystick Variables */
 #define JOY_X A0
 #define JOY_Y A1
@@ -72,6 +72,10 @@ void setup()
 {
   Serial.begin(9600);
 
+  #ifdef TESTING
+  run_all_tests();
+  #else
+
   srand(time(NULL));  // Set the random seed
 
   pinMode(LED_PIN, OUTPUT);
@@ -95,8 +99,7 @@ void setup()
   time_entered_setup = millis();
   display_setup();
 
-  /* for testing */
-  testing = false;
+  #endif
 }
 
 void loop()
@@ -183,8 +186,13 @@ void update_for_normal_gameplay(unsigned long mils)
     move_obstacles(all_obstacles, obstacle_direction);
     remove_out_of_bounds(all_obstacles);
 
-    // Spawn a new obstacle with probability 1/4
-    if (rand() % 4 == 0 || testing) {
+    // Spawn a new obstacle with probability 1/4 (under TESTING,
+    // always spawn a new obstacle)
+    #ifdef TESTING
+    if (true) {
+    #else
+    if (rand() % 4 == 0) {
+    #endif
       debug("Spawning new obstacle");
       spawn_random_obstacle(all_obstacles, obstacle_direction);
     }
@@ -210,8 +218,13 @@ void update_for_normal_gameplay(unsigned long mils)
   if (mils - time_last_dir_chg > DIR_CHG_INTERVAL) {
     debug("Possibly triggering direction change");
 
-    // With probability 1/4, trigger a direction change
-    if (rand() % 4 == 0  || testing) {
+    // With probability 1/4, trigger a direction change (under 
+    // TESTING, always cause direction change).
+    #ifdef TESTING
+    if (true) {
+    #else
+    if (rand() % 4 == 0) {
+    #endif
       debug("Direction change");
       pre_direction_change_flag = true;
       time_entered_pdc = mils;
@@ -224,7 +237,7 @@ void update_for_normal_gameplay(unsigned long mils)
     debug("Collision detected (player at (%d, %d))", player_x, player_y);
 
     game_over_flag = true;
-    duration = mils- start_time;
+    duration = mils - start_time;
   }
   update_joystick();
 
@@ -238,9 +251,6 @@ void update_for_normal_gameplay(unsigned long mils)
 
 /*
    Updates the FSM, given the current time in milliseconds.
-
-   TODO: label all transitions according to an FSM diagram, which we
-   also need to update.
 */
 state_t update_game_state(unsigned long mils)
 {
@@ -250,7 +260,7 @@ state_t update_game_state(unsigned long mils)
   switch (current_state) {
     case SETUP:
       // If we've waited in SETUP long enough
-      if (mils - time_entered_setup >= SETUP_WAIT_DURATION) {
+      if (mils - time_entered_setup >= SETUP_WAIT_DURATION) { // Transition 1-2
         debug("Transition: SETUP -> NORMAL");
         reset_fsm_variables(mils);
         next_state = NORMAL;
@@ -259,7 +269,7 @@ state_t update_game_state(unsigned long mils)
       break;
 
     case GAME_OVER:
-      if (restart_flag) {
+      if (restart_flag) { // Transition 4-1
         debug("Transition: GAME_OVER -> SETUP");
         next_state = SETUP;
         time_entered_setup = mils;
@@ -272,13 +282,13 @@ state_t update_game_state(unsigned long mils)
       update_for_normal_gameplay(mils);
 
       // Collision has occurred; game over.
-      if (game_over_flag) {
+      if (game_over_flag) { // Transition 2-4
         debug("Transition: NORMAL -> GAME_OVER");
         next_state = GAME_OVER;
         game_over_flag = false;
         display_game_over(duration);
         // It is time for a direction change
-      } else if (pre_direction_change_flag) {
+      } else if (pre_direction_change_flag) { // Transition 2-3
         debug("Transition: NORMAL -> PRE_DIRECTION_CHANGE");
         next_state = PRE_DIRECTION_CHANGE;
         pre_direction_change_flag = false;
@@ -289,7 +299,7 @@ state_t update_game_state(unsigned long mils)
       update_for_normal_gameplay(mils);
 
       // It's possible a collision occurs during pre-direction change
-      if (game_over_flag) {
+      if (game_over_flag) { // Transition 3-4
         debug("Transition: PRE_DIRECTION_CHANGE -> GAME_OVER");
         next_state = GAME_OVER;
         game_over_flag = false;
@@ -297,7 +307,7 @@ state_t update_game_state(unsigned long mils)
       }
       // If it has been long enough since the pre direction change state was
       // entered, flip the direction of obstacle movement and transition to NORMAL.
-      else if (mils - time_entered_pdc >= PRE_DIR_CHG_DURATION) {
+      else if (mils - time_entered_pdc >= PRE_DIR_CHG_DURATION) { // Transition 3-2
         debug("Transition: PRE_DIRECTION_CHANGE -> NORMAL");
         obstacle_direction = invert_direction(obstacle_direction);
         next_state = NORMAL;

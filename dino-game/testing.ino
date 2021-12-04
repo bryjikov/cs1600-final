@@ -106,10 +106,7 @@ bool run_one_test(state_vars_t start_state, state_vars_t expected_state, unsigne
 void add_objects(int test_num){
   if(test_num == 0){
     //creates a collision with player 
-    obstacle_t *obs = (obstacle_t *)malloc(sizeof(obstacle_t));
-    obs->x = 1;
-    obs->y = 1;
-    test_obstacles->add(obs);
+    create_obstacle_at(1, 1, test_obstacles);
   }
 }
 
