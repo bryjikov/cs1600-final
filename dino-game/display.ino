@@ -6,7 +6,6 @@
 
 #define PLAYER_CUSTOM_CHAR 0
 #define OBSTACLE_CUSTOM_CHAR 1
-#define BLACK_SQUARE 255
 
 // A person character
 byte person[8] = {
