@@ -34,12 +34,15 @@ LinkedPointerList<obstacle_t> *test_obstacles; /* a list to initially set the ob
 LinkedPointerList<obstacle_t> *test_exp_obstacles; /* a list containing the expected obstacles after the test */
 // index 0 = NORMAL -> GAME_OVER
 // index 1 = NORMAL -> PRE_DIRECTION_CHANGE
-state_vars_t input_states[2] = {{false,false,0,false,100,50,95,90,0,1,1,1,false,0,0,NULL,NORMAL}, 
-                                {false,false,0,false,1000,29500,19000,29000,0,1,1,1,false,0,0,NULL,NORMAL}}; /* values of global variables to start a test */
-state_vars_t output_states[2] = {{true,false,0,false,100,50,95,90,0,1,1,1,false,0,100,NULL,GAME_OVER},
-                                 {false,false,30000,false,1000,29500,30000,29000,0,1,1,1,false,0,0,NULL,PRE_DIRECTION_CHANGE}}; /* expected values of global variables after the test */
-unsigned long test_millis[2] = {100, 30000}; /* fake times for the test to take place */
-int num_tests = 1; /* number of tests to run */
+// index 2 = PRE_DIRECTION_CHANGE -> PRE_DIRECTION_CHANGE (also with obstacle speedup)
+state_vars_t input_states[3] = {{false,false,0,false,100,50,95,90,0,1,1,1,false,0,0,NULL,NORMAL}, 
+                                {false,false,0,false,1000,29500,19000,29000,0,1,1,1,false,0,0,NULL,NORMAL},
+                                {false,false,29000,false,1000,29500,29000,26000,0,1,1,1,false,0,0,NULL,PRE_DIRECTION_CHANGE}}; /* values of global variables to start a test */
+state_vars_t output_states[3] = {{true,false,0,false,100,50,95,90,0,1,1,1,false,0,100,NULL,GAME_OVER},
+                                 {false,false,30000,false,1000,29500,30000,29000,0,1,1,1,false,0,0,NULL,PRE_DIRECTION_CHANGE},
+                                 {false,false,29000,false,950,29500,29000,30000,0,1,1,1,false,0,0,NULL,PRE_DIRECTION_CHANGE}}; /* expected values of global variables after the test */
+unsigned long test_millis[3] = {100, 30000, 30000}; /* fake times for the test to take place */
+int num_tests = 3; /* number of tests to run */
 
 bool run_one_test(state_vars_t start_state, state_vars_t expected_state, unsigned long current_millis);
 
