@@ -14,10 +14,10 @@ void timer_setup() {
   TCNT2 = 0;
 
   //set count at for interrupt to occur, translates to 1kH frequency w/128 prescaler
-  //formula to determine interrupt frequency: (16 * 10^6) / (desired frequency * prescaler) - 1 [src 1]
+  //formula to determine OCR value: (16 * 10^6) / (desired frequency * prescaler) - 1 [src 1]
   OCR2A = 124;
 
-  //turn on CTC mode
+  //turn on CTC mode (timer goes off when TCNT matches OCR)
   TCCR2A |= (1 << WGM21);
 
   //set prescaler
