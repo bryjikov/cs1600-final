@@ -9,6 +9,9 @@
    index of your test in the test arrays. Put obstacles in test_obstacles and test_exp_onbstacles as desired.
 */
 
+// Only include this code if we are in testing mode.
+#ifdef TESTING
+
 typedef struct state_vars {
   bool game_over_flag;                     /* Set when the player has collided with an obstacle */
   bool pre_direction_change_flag;          /* Set when a direction change is upcoming and user should be warned */
@@ -38,19 +41,23 @@ LinkedPointerList<obstacle_t> *test_exp_obstacles; /* a list containing the expe
 // index 3 = PRE_DIRECTION_CHANGE -> NORMAL (also with obstacle move)
 // index 4 = PRE_DIRECTION_CHANGE -> GAME_OVER
 /* values of global variables to start a test */
-state_vars_t input_states[5] = {{false,false,0,false,100,50,95,90,0,1,1,1,false,0,0,NULL,NORMAL}, 
-                                {false,false,0,false,1000,29500,19000,29000,0,1,1,1,false,0,0,NULL,NORMAL},
-                                {false,false,29000,false,1000,29500,29000,26000,0,1,1,1,false,0,0,NULL,PRE_DIRECTION_CHANGE},
-                                {false,false,29000,false,30,31900,29000,28000,0,1,1,1,false,0,0,NULL,PRE_DIRECTION_CHANGE},
-                                {false,false,29000,false,1000,29500,29000,29000,0,1,1,1,false,0,0,NULL,PRE_DIRECTION_CHANGE}}; 
+state_vars_t input_states[5] = {
+  {false, false, 0, false, 100, 50, 95, 90, 0, 1, 1, 1, false, 0, 0, NULL, NORMAL},
+  {false, false, 0, false, 1000, 29500, 19000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, NORMAL},
+  {false, false, 29000, false, 1000, 29500, 29000, 26000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
+  {false, false, 29000, false, 30, 31900, 29000, 28000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
+  {false, false, 29000, false, 1000, 29500, 29000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE}
+};
 /* expected values of global variables after the test */
-state_vars_t output_states[5] = {{false,false,0,false,100,50,95,90,0,1,1,1,false,0,100,NULL,GAME_OVER},
-                                 {false,false,30000,false,1000,29500,30000,29000,0,1,1,1,false,0,0,NULL,PRE_DIRECTION_CHANGE},
-                                 {false,false,29000,false,950,29500,29000,30000,0,1,1,1,false,0,0,NULL,PRE_DIRECTION_CHANGE},
-                                 {false,false,29000,false,0,32000,29000,28000,0,0,1,1,true,0,0,NULL,NORMAL},
-                                 {false,false,29000,false,1000,29500,29000,30000,0,1,1,1,false,0,30000,NULL,GAME_OVER}};
-/* fake times for the test to take place */                                 
-unsigned long test_millis[5] = {100, 30000, 30000, 32000, 30000}; 
+state_vars_t output_states[5] = {
+  {false, false, 0, false, 100, 50, 95, 90, 0, 1, 1, 1, false, 0, 100, NULL, GAME_OVER},
+  {false, false, 30000, false, 1000, 29500, 30000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
+  {false, false, 29000, false, 950, 29500, 29000, 30000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
+  {false, false, 29000, false, 0, 32000, 29000, 28000, 0, 0, 1, 1, true, 0, 0, NULL, NORMAL},
+  {false, false, 29000, false, 1000, 29500, 29000, 30000, 0, 1, 1, 1, false, 0, 30000, NULL, GAME_OVER}
+};
+/* fake times for the test to take place */
+unsigned long test_millis[5] = {100, 30000, 30000, 32000, 30000};
 int num_tests = 5; /* number of tests to run */
 
 bool run_one_test(state_vars_t start_state, state_vars_t expected_state, unsigned long current_millis);
@@ -142,7 +149,7 @@ void remove_objects(void) {
   }
 }
 
-void run_all_tests() {
+void run_all_tests(void) {
   test_obstacles = new LinkedPointerList<obstacle_t>();
   test_exp_obstacles = new LinkedPointerList<obstacle_t>();
 
@@ -165,3 +172,5 @@ void run_all_tests() {
 
   Serial.println("Done with tests!");
 }
+
+#endif
