@@ -6,7 +6,7 @@
    test to take place in test_millis. Increase the size of all of the arrays and update num_tests.
 
    You will also need to setup your obstacle lists as desired. Add another "if" case to the add_objects function for the
-   index of your test in the test arrays. Put obstacles in test_obstacles and test_exp_onbstacles as desired.
+   index of your test in the test arrays. Put obstacles in test_obstacles and test_exp_obstacles as desired.
 */
 
 // Only include this code if we are in testing mode.
@@ -32,6 +32,11 @@ typedef struct state_vars {
   state_t current_state;                   /* state of the fsm */
 } state_vars_t;
 
+typedef struct test_case {
+  state_vars_t input;
+  state_vars_t output;
+} test_case_t;
+
 //testing variables:
 LinkedPointerList<obstacle_t> *test_obstacles; /* a list to initially set the obstacles for the test */
 LinkedPointerList<obstacle_t> *test_exp_obstacles; /* a list containing the expected obstacles after the test */
@@ -41,20 +46,36 @@ LinkedPointerList<obstacle_t> *test_exp_obstacles; /* a list containing the expe
 // index 3 = PRE_DIRECTION_CHANGE -> NORMAL (also with obstacle move)
 // index 4 = PRE_DIRECTION_CHANGE -> GAME_OVER
 /* values of global variables to start a test */
-state_vars_t input_states[5] = {
-  {false, false, 0, false, 100, 50, 95, 90, 0, 1, 1, 1, false, 0, 0, NULL, NORMAL},
-  {false, false, 0, false, 1000, 29500, 19000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, NORMAL},
-  {false, false, 29000, false, 1000, 29500, 29000, 26000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
-  {false, false, 29000, false, 30, 31900, 29000, 28000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
-  {false, false, 29000, false, 1000, 29500, 29000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE}
-};
-/* expected values of global variables after the test */
-state_vars_t output_states[5] = {
-  {false, false, 0, false, 100, 50, 95, 90, 0, 1, 1, 1, false, 0, 100, NULL, GAME_OVER},
-  {false, false, 30000, false, 1000, 29500, 30000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
-  {false, false, 29000, false, 950, 29500, 29000, 30000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
-  {false, false, 29000, false, 0, 32000, 29000, 28000, 0, 0, 1, 1, true, 0, 0, NULL, NORMAL},
-  {false, false, 29000, false, 1000, 29500, 29000, 30000, 0, 1, 1, 1, false, 0, 30000, NULL, GAME_OVER}
+//state_vars_t input_states[5] = {
+//  {false, false, 0, false, 100, 50, 95, 90, 0, 1, 1, 1, false, 0, 0, NULL, NORMAL},
+//  {false, false, 0, false, 1000, 29500, 19000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, NORMAL},
+//  {false, false, 29000, false, 1000, 29500, 29000, 26000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
+//  {false, false, 29000, false, 30, 31900, 29000, 28000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
+//  {false, false, 29000, false, 1000, 29500, 29000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE}
+//};
+///* expected values of global variables after the test */
+//state_vars_t output_states[5] = {
+//  {false, false, 0, false, 100, 50, 95, 90, 0, 1, 1, 1, false, 0, 100, NULL, GAME_OVER},
+//  {false, false, 30000, false, 1000, 29500, 30000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
+//  {false, false, 29000, false, 950, 29500, 29000, 30000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
+//  {false, false, 29000, false, 0, 32000, 29000, 28000, 0, 0, 1, 1, true, 0, 0, NULL, NORMAL},
+//  {false, false, 29000, false, 1000, 29500, 29000, 30000, 0, 1, 1, 1, false, 0, 30000, NULL, GAME_OVER}
+//};
+test_case_t test_cases[5] = {
+  {{false, false, 0, false, 100, 50, 95, 90, 0, 1, 1, 1, false, 0, 0, NULL, NORMAL},
+   {false, false, 0, false, 100, 50, 95, 90, 0, 1, 1, 1, false, 0, 100, NULL, GAME_OVER}},
+   
+  {{false, false, 0, false, 1000, 29500, 19000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, NORMAL},
+   {false, false, 30000, false, 1000, 29500, 30000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE}},
+   
+  {{false, false, 29000, false, 1000, 29500, 29000, 26000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
+   {false, false, 29000, false, 950, 29500, 29000, 30000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE}},
+   
+  {{false, false, 29000, false, 30, 31900, 29000, 28000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
+    {false, false, 29000, false, 0, 32000, 29000, 28000, 0, 0, 1, 1, true, 0, 0, NULL, NORMAL}},
+    
+  {{false, false, 29000, false, 1000, 29500, 29000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
+   {false, false, 29000, false, 1000, 29500, 29000, 30000, 0, 1, 1, 1, false, 0, 30000, NULL, GAME_OVER}}
 };
 /* fake times for the test to take place */
 unsigned long test_millis[5] = {100, 30000, 30000, 32000, 30000};
@@ -155,8 +176,11 @@ void run_all_tests(void) {
 
   for (int i = 0; i < num_tests; i++) {
     //setup the test
-    state_vars_t input_state = input_states[i];
-    state_vars_t output_state = output_states[i];
+    test_case_t test_states = test_cases[i];
+    state_vars_t input_state = test_states.input;
+    state_vars_t output_state = test_states.output;
+//    state_vars_t input_state = input_states[i];
+//    state_vars_t output_state = output_states[i];
     add_objects(i);
     input_state.all_obstacles = test_obstacles;
     output_state.all_obstacles = test_exp_obstacles;
