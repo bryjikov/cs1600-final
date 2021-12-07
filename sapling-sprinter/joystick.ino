@@ -94,7 +94,7 @@ void joystick_button_press(void)
   }
 }
 
-#define TESTING // TODO: remove
+
 #ifdef TESTING
 
 /**
