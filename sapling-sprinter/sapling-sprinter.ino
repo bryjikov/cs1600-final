@@ -62,7 +62,10 @@ void setup()
   Serial.begin(9600);
 
 #ifdef TESTING
+  // Wait for serial monitor to open, run tests, and do nothing else
+  while (!Serial);
   run_all_tests();
+  while (true);
 #else
 
   srand(time(NULL));  // Set the random seed
