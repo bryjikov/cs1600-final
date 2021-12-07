@@ -161,19 +161,6 @@ obstacle_t *create_obstacle_at(uint8_t x, uint8_t y, LinkedPointerList<obstacle_
 
 #ifdef TESTING
 
-/**
- * Assert that a condition is true and print a success/failure 
- * message accordingly.
- */
-void test_assert(bool condition)
-{
-  if (!condition) {
-    PRINTLN_FLASH("[!! FAIL !!]");
-  } else {
-    PRINTLN_FLASH("[PASS]");
-  }
-}
-
 /*
  * Unit tests for obstacle functions
  */

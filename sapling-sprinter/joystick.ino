@@ -1,10 +1,10 @@
-/**
+/*
  * joystick.ino
  * Functionality pertaining to the joystick used to control player
  * movement and game resets.
  */
 
-/**
+/*
  * Analog pins used for reading the X and Y position of the joystick,
  * and the digital pin used for handling joystick button presses.
  */
@@ -17,15 +17,20 @@ int joystickPrevPosY = 0;
 int joystickInitialPosX;
 int joystickInitialPosY;
 
-/**
+/*
  * Initialize the joystick by taking an initial reading of the 
  * joystick position to compare with later.
  */
 void initialize_joystick(void)
 {
-  // TODO: under testing, this needs to be different.
+#ifdef TESTING
+  // TODO: under testing, these should be set by globals
+  joystickInitialPosX = 0;
+  joystickInitialPosY = 0;
+#else
   joystickInitialPosX = analogRead(JOY_X);
   joystickInitialPosY = analogRead(JOY_Y);
+#endif
 }
 
 /*
@@ -49,8 +54,8 @@ int convert_joystick_pos(int pos, int init)
 }
 
 /*
-  Update Joystick position and map the joysticks value (0, 1023) to
-  (-1, 1) where it is only 0 if at center position (500, 515).
+  Read the current joystick position, and if movement is detected, update
+  the player's position accordingly.
 */
 void update_joystick(void)
 {
@@ -88,3 +93,38 @@ void joystick_button_press(void)
     restart_flag = true;
   }
 }
+
+#define TESTING // TODO: remove
+#ifdef TESTING
+
+/**
+ * Unit tests for joystick functions
+ */
+void test_joystick(void)
+{
+  PRINTLN_FLASH("Testing convert_joystick_pos...");
+  test_assert(convert_joystick_pos(10, 10) == 0);
+  test_assert(convert_joystick_pos(400, 400 - JOYSTICK_CHANGE_THRESHOLD) == 0);
+  test_assert(convert_joystick_pos(70, 70 + (2 * JOYSTICK_CHANGE_THRESHOLD)) == 1);
+  test_assert(convert_joystick_pos(350, 350 - (4 * JOYSTICK_CHANGE_THRESHOLD)) == -1);
+
+  PRINTLN_FLASH("Testing joystick_button_press...");
+  // No change during SETUP
+  current_state = SETUP; restart_flag = false;
+  joystick_button_press();
+  test_assert(!restart_flag);
+  // No change during NORMAL
+  current_state = NORMAL; restart_flag = false;
+  joystick_button_press();
+  test_assert(!restart_flag);
+  // No change during PRE_DIRECTION_CHANGE
+  current_state = PRE_DIRECTION_CHANGE; restart_flag = false;
+  joystick_button_press();
+  test_assert(!restart_flag);
+  // Flag set when in GAME_OVER
+  current_state = GAME_OVER; restart_flag = false;
+  joystick_button_press();
+  test_assert(restart_flag);
+}
+
+#endif
