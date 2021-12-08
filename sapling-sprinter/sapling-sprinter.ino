@@ -279,25 +279,24 @@ state_t update_game_state(unsigned long mils)
       break;
 
     case NORMAL:
-      update_for_normal_gameplay(mils);
-
       // Collision has occurred; game over.
       if (game_over_flag) { // Transition 2-4
         debug("Transition: NORMAL -> GAME_OVER");
         next_state = GAME_OVER;
         game_over_flag = false;
         display_game_over(duration);
-        // It is time for a direction change
-      } else if (pre_direction_change_flag) { // Transition 2-3
+      }
+      // It is time for a direction change
+      else if (pre_direction_change_flag) { // Transition 2-3
         debug("Transition: NORMAL -> PRE_DIRECTION_CHANGE");
         next_state = PRE_DIRECTION_CHANGE;
         pre_direction_change_flag = false;
+      } else {  // Transition 2-2
+        update_for_normal_gameplay(mils);
       }
       break;
 
     case PRE_DIRECTION_CHANGE:
-      update_for_normal_gameplay(mils);
-
       // It's possible a collision occurs during pre-direction change
       if (game_over_flag) { // Transition 3-4
         debug("Transition: PRE_DIRECTION_CHANGE -> GAME_OVER");
@@ -311,6 +310,8 @@ state_t update_game_state(unsigned long mils)
         debug("Transition: PRE_DIRECTION_CHANGE -> NORMAL");
         obstacle_direction = invert_direction(obstacle_direction);
         next_state = NORMAL;
+      } else {  // Transition 3-3
+        update_for_normal_gameplay(mils);
       }
       break;
 
