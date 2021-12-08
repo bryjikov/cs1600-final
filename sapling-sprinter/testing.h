@@ -6,11 +6,17 @@
 /*
  * Assert that a condition is true and print a success/failure 
  * message accordingly.
+ * 
+ * Note: The test_assert macro converts each condition to a string and 
+ * indicates that these strings should be stored in flash memory. So, we
+ * pass the condition_str as (__FlashStringHelper *), which Serial.println knows 
+ * how to print (it can't be printed as a normal string since it's in flash)
  */
-static void test_assert_underyling(bool condition, char *condition_str)
+static void test_assert_underyling(bool condition, __FlashStringHelper *condition_str)
 {
   if (!condition) {
-    serial_printf("[FAILURE] %s\n", condition_str);
+    Serial.print(F("[FAILURE] "));
+    Serial.println(condition_str);
   } else {
     PRINTLN_FLASH("[PASS]");
   }
@@ -22,4 +28,4 @@ static void test_assert_underyling(bool condition, char *condition_str)
  * This wrapper converts the condition to a string
  * which can be printed if the assertion fails.
  */
-#define test_assert(cond) test_assert_underyling(cond, #cond)    // TODO: can these strings be in flash
+#define test_assert(cond) test_assert_underyling(cond, F(#cond))
