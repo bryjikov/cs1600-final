@@ -104,7 +104,6 @@ void test_joystick(void)
   test_assert(convert_joystick_pos(400, 400 - JOYSTICK_CHANGE_THRESHOLD) == 0);
   test_assert(convert_joystick_pos(70, 70 + (2 * JOYSTICK_CHANGE_THRESHOLD)) == -1);
   test_assert(convert_joystick_pos(350, 350 - (4 * JOYSTICK_CHANGE_THRESHOLD)) == 1);
-
   PRINTLN_FLASH("Testing joystick_button_press...");
   // No change during SETUP
   current_state = SETUP; restart_flag = false;
