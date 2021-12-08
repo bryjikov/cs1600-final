@@ -30,6 +30,12 @@ typedef struct state_vars {
   state_t current_state;                   /* state of the fsm */
 } state_vars_t;
 
+typedef struct test_case {
+  state_vars_t input;
+  state_vars_t output;
+  unsigned long mils;
+} test_case_t;
+
 //testing variables:
 LinkedPointerList<obstacle_t> *test_obstacles; /* a list to initially set the obstacles for the test */
 LinkedPointerList<obstacle_t> *test_exp_obstacles; /* a list containing the expected obstacles after the test */
@@ -39,23 +45,57 @@ LinkedPointerList<obstacle_t> *test_exp_obstacles; /* a list containing the expe
 // index 3 = PRE_DIRECTION_CHANGE -> NORMAL (also with obstacle move)
 // index 4 = PRE_DIRECTION_CHANGE -> GAME_OVER
 /* values of global variables to start a test */
-state_vars_t input_states[5] = {
-  {false, false, 0, false, 100, 50, 95, 90, 0, 1, 1, 1, false, 0, 0, NULL, NORMAL},
-  {false, false, 0, false, 1000, 29500, 19000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, NORMAL},
-  {false, false, 29000, false, 1000, 29500, 29000, 26000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
-  {false, false, 29000, false, 0, 31900, 29000, 31000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
-  {false, false, 29000, false, 1000, 29500, 29000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE}
+//state_vars_t input_states[5] = {
+//  {false, false, 0, false, 100, 50, 95, 90, 0, 1, 1, 1, false, 0, 0, NULL, NORMAL},
+//  {false, false, 0, false, 1000, 29500, 19000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, NORMAL},
+//  {false, false, 29000, false, 1000, 29500, 29000, 26000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
+//  {false, false, 29000, false, 0, 31900, 29000, 31000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
+//  {false, false, 29000, false, 1000, 29500, 29000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE}
+//};
+///* expected values of global variables after the test */
+//state_vars_t output_states[5] = {
+//  {false, false, 0, false, 100, 50, 95, 90, 0, 1, 1, 1, false, 0, 100, NULL, GAME_OVER},
+//  {false, false, 30000, false, 1000, 29500, 30000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
+//  {false, false, 29000, false, 950, 29500, 29000, 30000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
+//  {false, false, 29000, false, 0, 32000, 29000, 31000, 0, 0, 1, 1, false, 0, 0, NULL, NORMAL},
+//  {false, false, 29000, false, 1000, 29500, 29000, 29000, 0, 1, 1, 1, false, 0, 30000, NULL, GAME_OVER}
+//};
+///* fake times for the test to take place */
+//unsigned long test_millis[5] = {100, 30000, 30000, 32000, 30000};
+
+test_case_t test_cases[5] = {
+  //SETUP -> NORMAL
+  
+  //NORMAL -> NORMAL
+  
+  //NORMAL -> PRE_DIRECTION_CHANGE
+  {{false, false, 0, false, 1000, 29500, 19000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, NORMAL},
+   {false, false, 30000, false, 1000, 29500, 30000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
+   30000},
+  
+  //NORMAL -> GAME_OVER
+  {{false, false, 0, false, 100, 50, 95, 90, 0, 1, 1, 1, false, 0, 0, NULL, NORMAL},
+   {false, false, 0, false, 100, 50, 95, 90, 0, 1, 1, 1, false, 0, 100, NULL, GAME_OVER},
+   100},
+
+  //PRE_DIRECTION_CHANGE -> NORMAL
+  {{false, false, 29000, false, 0, 31900, 29000, 31000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
+   {false, false, 29000, false, 0, 32000, 29000, 31000, 0, 0, 1, 1, false, 0, 0, NULL, NORMAL},
+   32000},
+
+  //PRE_DIRECTION_CHANGE -> PRE_DIRECTION_CHANGE
+  {{false, false, 29000, false, 1000, 29500, 29000, 26000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
+   {false, false, 29000, false, 950, 29500, 29000, 30000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
+   30000},
+
+  //PRE_DIRECTION_CHANGE -> GAME_OVER
+  {{false, false, 29000, false, 1000, 29500, 29000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
+   {false, false, 29000, false, 1000, 29500, 29000, 29000, 0, 1, 1, 1, false, 0, 30000, NULL, GAME_OVER},
+   30000}
+
+  //GAME_OVER -> SETUP
 };
-/* expected values of global variables after the test */
-state_vars_t output_states[5] = {
-  {false, false, 0, false, 100, 50, 95, 90, 0, 1, 1, 1, false, 0, 100, NULL, GAME_OVER},
-  {false, false, 30000, false, 1000, 29500, 30000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
-  {false, false, 29000, false, 950, 29500, 29000, 30000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
-  {false, false, 29000, false, 0, 32000, 29000, 31000, 0, 0, 1, 1, false, 0, 0, NULL, NORMAL},
-  {false, false, 29000, false, 1000, 29500, 29000, 30000, 0, 1, 1, 1, false, 0, 30000, NULL, GAME_OVER}
-};
-/* fake times for the test to take place */
-unsigned long test_millis[5] = {100, 30000, 30000, 32000, 30000};
+
 int num_tests = 5; /* number of tests to run */
 
 bool run_one_test(state_vars_t start_state, state_vars_t expected_state, unsigned long current_millis);
@@ -99,39 +139,39 @@ bool run_one_test(state_vars_t start_state, state_vars_t expected_state, unsigne
   current_state = start_state.current_state;
   // run fsm
   state_t end_state = update_game_state(current_millis);
-  Serial.println("Printing State: ");
-  Serial.print("game_over_flag: ");
-  Serial.println(game_over_flag);
-  Serial.print("pre_direction_change_flag: ");
-  Serial.println(pre_direction_change_flag);
-  Serial.print("time_entered_pdc: ");
-  Serial.println(time_entered_pdc);
-  Serial.print("restart_flag: ");
-  Serial.println(restart_flag);
-  Serial.print("obstacle_move_interval: ");
-  Serial.println(obstacle_move_interval);
-  Serial.print("time_last_obstacle_move: ");
-  Serial.println(time_last_obstacle_move);
-  Serial.print("time_last_dir_chg: ");
-  Serial.println(time_last_dir_chg);
-  Serial.print("time_last_speed_up: ");
-  Serial.println(time_last_speed_up);
-  Serial.print("time_entered_setup: ");
-  Serial.println(time_entered_setup);
-  Serial.print("obstacle_direction: ");
-  Serial.println(obstacle_direction);
-  Serial.print("player_x: ");
-  Serial.println(player_x);
-  Serial.print("player_y: ");
-  Serial.println(player_y);
-  Serial.print("moved: ");
-  Serial.println(moved);
-  Serial.print("start_time: ");
-  Serial.println(start_time);
-  Serial.print("duration: ");
-  Serial.println(duration);
-  Serial.print("end_state: ");
-  Serial.println(end_state);
+//  Serial.println("Printing State: ");
+//  Serial.print("game_over_flag: ");
+//  Serial.println(game_over_flag);
+//  Serial.print("pre_direction_change_flag: ");
+//  Serial.println(pre_direction_change_flag);
+//  Serial.print("time_entered_pdc: ");
+//  Serial.println(time_entered_pdc);
+//  Serial.print("restart_flag: ");
+//  Serial.println(restart_flag);
+//  Serial.print("obstacle_move_interval: ");
+//  Serial.println(obstacle_move_interval);
+//  Serial.print("time_last_obstacle_move: ");
+//  Serial.println(time_last_obstacle_move);
+//  Serial.print("time_last_dir_chg: ");
+//  Serial.println(time_last_dir_chg);
+//  Serial.print("time_last_speed_up: ");
+//  Serial.println(time_last_speed_up);
+//  Serial.print("time_entered_setup: ");
+//  Serial.println(time_entered_setup);
+//  Serial.print("obstacle_direction: ");
+//  Serial.println(obstacle_direction);
+//  Serial.print("player_x: ");
+//  Serial.println(player_x);
+//  Serial.print("player_y: ");
+//  Serial.println(player_y);
+//  Serial.print("moved: ");
+//  Serial.println(moved);
+//  Serial.print("start_time: ");
+//  Serial.println(start_time);
+//  Serial.print("duration: ");
+//  Serial.println(duration);
+//  Serial.print("end_state: ");
+//  Serial.println(end_state);
   //check if end state macthes expected
   bool test_passed = (end_state == expected_state.current_state and
                       game_over_flag == expected_state.game_over_flag and
@@ -192,12 +232,12 @@ bool run_one_test(state_vars_t start_state, state_vars_t expected_state, unsigne
 //}
 
 void add_objects(int test_num) {
-  if (test_num == 0 || test_num == 4) {
+  if (test_num == 1 || test_num == 4) {
     //creates a collision with player
     create_obstacle_at(1, 1, test_obstacles);
     create_obstacle_at(1, 1, test_exp_obstacles);
   }
-  if (test_num == 3) {
+  if (test_num == 2) {
     //creates a collision with player
     create_obstacle_at(5, 1, test_obstacles);
     create_obstacle_at(6, 1, test_exp_obstacles);
@@ -211,13 +251,13 @@ void run_all_tests(void) {
 
   for (int i = 0; i < num_tests; i++) {
     //setup the test
-    state_vars_t input_state = input_states[i];
-    state_vars_t output_state = output_states[i];
+    state_vars_t input_state = test_cases[i].input;
+    state_vars_t output_state = test_cases[i].output;
     add_objects(i);
     input_state.all_obstacles = test_obstacles;
     output_state.all_obstacles = test_exp_obstacles;
     //run the test
-    if (!run_one_test(input_state, output_state, test_millis[i])) {
+    if (!run_one_test(input_state, output_state, test_cases[i].mils)) {
       Serial.print("FSM TEST FAILED: TEST INDEX ");
     } else {
       Serial.print("fsm test passed: test index ");
