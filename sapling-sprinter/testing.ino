@@ -136,19 +136,6 @@ void add_objects(int test_num) {
   }
 }
 
-
-void remove_objects(void) {
-  obstacle_t *o;
-  for (int i = 0; i < test_obstacles->size(); i++) {
-    o = test_obstacles->get(i);
-    free(o);
-  }
-  for (int i = 0; i < test_exp_obstacles->size(); i++) {
-    o = test_exp_obstacles->get(i);
-    free(o);
-  }
-}
-
 void run_all_tests(void) {
   test_obstacles = new LinkedPointerList<obstacle_t>();
   test_exp_obstacles = new LinkedPointerList<obstacle_t>();
@@ -165,10 +152,11 @@ void run_all_tests(void) {
       Serial.println("failed a test!");
     }
     //clear the test
-    remove_objects();
-    test_obstacles->clear();
-    test_exp_obstacles->clear();
+    free_all(test_obstacles); free_all(test_exp_obstacles);
   }
+
+  test_obstacle_functions();
+  test_joystick();
 
   Serial.println("Done with tests!");
 }
