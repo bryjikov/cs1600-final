@@ -7,6 +7,7 @@
 #include "display.h"
 #include "led.h"
 #include "logging.h"
+#include "testing.h"
 
 // Uncomment this for test mode
 #define TESTING

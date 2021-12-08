@@ -6,7 +6,7 @@
 #include <stdarg.h>
 
 // Uncomment this to enable debug logging
-#define DEBUG_LOGGING
+// #define DEBUG_LOGGING
 
 #define LOG_BUFFER_SIZE 128
 

@@ -161,18 +161,4 @@ void run_all_tests(void) {
   Serial.println("Done with tests!");
 }
 
-/*
- * Assert that a condition is true and print a success/failure 
- * message accordingly.
- */
-void test_assert(bool condition)
-{
-  if (!condition) {
-    PRINTLN_FLASH("[!! FAIL !!]");
-  } else {
-    PRINTLN_FLASH("[PASS]");
-  }
-}
-
-
 #endif
