@@ -7,6 +7,7 @@
 #include "display.h"
 #include "led.h"
 #include "logging.h"
+#include "testing.h"
 
 // Uncomment this for test mode
 #define TESTING
@@ -43,17 +44,6 @@ volatile unsigned long start_time;                /* The time (in milis) when th
 volatile unsigned long duration;                  /* The total time that the game lasted */
 LinkedPointerList<obstacle_t> *all_obstacles;     /* List containing all currently active obstacles */
 
-/* Joystick Variables */
-#define JOY_X A0
-#define JOY_Y A1
-#define BUTTON_PIN 2
-int joystickPosX = 0;
-int joystickPosY = 0;
-int joystickPrevPosX = 0;
-int joystickPrevPosY = 0;
-int joystickInitialPosX = 0;
-int joystickInitialPosY = 0;
-
 typedef enum
 {
   /* All FSM variables should be initialized */
@@ -73,23 +63,24 @@ void setup()
   Serial.begin(9600);
 
 #ifdef TESTING
+  // Wait for serial monitor to open, run tests, and do nothing else
+  while (!Serial);
   run_all_tests();
+  while (true);
 #else
 
   srand(time(NULL));  // Set the random seed
 
   pinMode(LED_PIN, OUTPUT);
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), buttonPressInterrupt, RISING);
+  pinMode(JOY_BUTTON, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(JOY_BUTTON), joystick_button_press, RISING);
 
   all_obstacles = new LinkedPointerList<obstacle_t>();
 
   initialize_lcd();
+  initialize_joystick();
 
   timer_setup();
-
-  joystickInitialPosX = analogRead(JOY_X);
-  joystickInitialPosY = analogRead(JOY_Y);
 
   stop_watchdog();
   setup_watchdog();
@@ -139,36 +130,6 @@ void reset_fsm_variables(unsigned long mils) {
   obstacle_direction = LEFT;
   moved = true;
   free_all(all_obstacles);
-  all_obstacles->clear();
-}
-
-/*
-  Update Joystick position and map the joysticks value (0, 1023) to
-  (-1, 1) where it is only 0 if at center position (500, 515).
-*/
-void update_joystick(void)
-{
-  int xValue = analogRead(JOY_X);
-  int yValue = analogRead(JOY_Y);
-  joystickPosX = xValue >= joystickInitialPosX - 15 && xValue <= joystickInitialPosX + 15 ? 0 : xValue > joystickInitialPosX + 15 ? 1 : -1;
-  joystickPosY = yValue >= joystickInitialPosY - 15 && yValue <= joystickInitialPosY + 15 ? 0 : yValue > joystickInitialPosY + 15 ? 1 : -1;
-  if (joystickPosX != joystickPrevPosX || joystickPosY != joystickPrevPosY) {
-    joystick_position_changed();
-  }
-  joystickPrevPosX = joystickPosX;
-  joystickPrevPosY = joystickPosY;
-}
-
-/*
-   Called if the joystick's position does not match its previous (a move occurred).
-   Moves player position but contrains it within the bounds of the display. Registers
-   that the screen must be redrawn by setting `moved`.
-*/
-void joystick_position_changed(void)
-{
-  player_x = constrain(player_x + joystickPosX, LCD_X_MIN, LCD_X_MAX);
-  player_y = constrain(player_y + joystickPosY, LCD_Y_MIN, LCD_Y_MAX);
-  moved = true;
 }
 
 /*
@@ -239,6 +200,7 @@ void update_for_normal_gameplay(unsigned long mils)
     game_over_flag = true;
     duration = mils - start_time;
   }
+
   update_joystick();
 
   if (moved) {
@@ -320,16 +282,4 @@ state_t update_game_state(unsigned long mils)
   }
 
   return next_state;
-}
-
-/*
-   Interrupt handler for button presses on the joystick. If currently
-   in a game over state, the game is restarted. Otherwise, presses are ignored.
-*/
-void buttonPressInterrupt(void)
-{
-  if (current_state == GAME_OVER) {
-    debug("Joystick button pressed in GAME_OVER: resetting");
-    restart_flag = true;
-  }
 }

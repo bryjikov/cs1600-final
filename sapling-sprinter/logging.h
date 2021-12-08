@@ -6,7 +6,7 @@
 #include <stdarg.h>
 
 // Uncomment this to enable debug logging
-#define DEBUG_LOGGING
+// #define DEBUG_LOGGING
 
 #define LOG_BUFFER_SIZE 128
 
@@ -27,6 +27,14 @@ void serial_printf(char *format, ...)
   FORMAT_TO_BUFFER(buf, LOG_BUFFER_SIZE, format);
   Serial.print(buf);
 }
+
+/**
+ * Prints a string literal to Serial, but stores the string
+ * in flash memory to save RAM.
+ * 
+ * More info: https://playground.arduino.cc/Learning/Memory/
+ */
+#define PRINTLN_FLASH(str) Serial.println(F(str))
 
 /*
    Macro wrapper around halt_with_error_underlying so we can call it
