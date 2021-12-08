@@ -22,4 +22,4 @@ static void test_assert_underyling(bool condition, char *condition_str)
  * This wrapper converts the condition to a string
  * which can be printed if the assertion fails.
  */
-#define test_assert(cond) test_assert_underyling(cond, (char *)F(#cond))    // FIXME: this cast could be sketchy
+#define test_assert(cond) test_assert_underyling(cond, #cond)    // TODO: can these strings be in flash
