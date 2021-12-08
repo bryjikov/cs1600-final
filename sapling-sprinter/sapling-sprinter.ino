@@ -19,6 +19,11 @@ const int rs = 0, en = 1, d4 = 2, d5 = 3, d6 = 4, d7 = 5;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 #endif
 
+/* Joystick Pins */
+#define JOY_X A0
+#define JOY_Y A1
+#define JOY_BUTTON 2
+
 /* FSM Constants and Variables */
 #define PRE_DIR_CHG_DURATION              2000    /* How long to remain in PDC state (ms) */
 #define DIR_CHG_INTERVAL                  10000   /* How often (ms) a direction change potentially happens */

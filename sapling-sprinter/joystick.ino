@@ -8,9 +8,6 @@
  * Analog pins used for reading the X and Y position of the joystick,
  * and the digital pin used for handling joystick button presses.
  */
-#define JOY_X A0
-#define JOY_Y A1
-#define JOY_BUTTON 2
 
 int joystickPrevPosX = 0;
 int joystickPrevPosY = 0;
@@ -105,8 +102,8 @@ void test_joystick(void)
   PRINTLN_FLASH("Testing convert_joystick_pos...");
   test_assert(convert_joystick_pos(10, 10) == 0);
   test_assert(convert_joystick_pos(400, 400 - JOYSTICK_CHANGE_THRESHOLD) == 0);
-  test_assert(convert_joystick_pos(70, 70 + (2 * JOYSTICK_CHANGE_THRESHOLD)) == 1);
-  test_assert(convert_joystick_pos(350, 350 - (4 * JOYSTICK_CHANGE_THRESHOLD)) == -1);
+  test_assert(convert_joystick_pos(70, 70 + (2 * JOYSTICK_CHANGE_THRESHOLD)) == -1);
+  test_assert(convert_joystick_pos(350, 350 - (4 * JOYSTICK_CHANGE_THRESHOLD)) == 1);
 
   PRINTLN_FLASH("Testing joystick_button_press...");
   // No change during SETUP
