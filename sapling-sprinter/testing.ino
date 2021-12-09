@@ -39,12 +39,12 @@ typedef struct test_case {
 LinkedPointerList<obstacle_t> *test_obstacles; /* a list to initially set the obstacles for the test */
 LinkedPointerList<obstacle_t> *test_exp_obstacles; /* a list containing the expected obstacles after the test */
 
-test_case_t test_cases[6] = {
+const test_case_t test_cases[] PROGMEM = {
   //SETUP -> NORMAL
   {{false, false, 0, false, 0, 0, 0, 0, 0, 0, 0, 0, false, 0, 0, NULL, SETUP},
    {false, false, 0, false, 1000, 0, 0, 0, 0, 0, 10, 3, true, 2000, 0, NULL, NORMAL},
    2000},
-/*
+
   {{false, false, 0, false, 0, 0, 0, 0, 0, 0, 0, 0, false, 0, 0, NULL, SETUP},
    {false, false, 0, false, 0, 0, 0, 0, 0, 0, 0, 0, false, 0, 0, NULL, SETUP},
    1999},
@@ -52,7 +52,7 @@ test_case_t test_cases[6] = {
   {{false, false, 0, false, 0, 0, 0, 0, 1000, 0, 0, 0, false, 0, 0, NULL, SETUP},
    {false, false, 0, false, 1000, 0, 0, 0, 0, 0, 10, 3, true, 3000, 0, NULL, NORMAL},
    3000},
-*/
+
   //NORMAL -> NORMAL
   {{false, false, 0, false, 1000, 29500, 19000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, NORMAL},
    {false, true, 30000, false, 1000, 29500, 30000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, NORMAL},
@@ -85,7 +85,7 @@ test_case_t test_cases[6] = {
   //GAME_OVER -> SETUP
 };
 
-int num_tests = 6; /* number of tests to run */
+int num_tests = sizeof(test_cases) / sizeof(test_case_t); /* number of tests to run */
 
 bool run_one_test(state_vars_t start_state, state_vars_t expected_state, unsigned long current_millis);
 
@@ -128,40 +128,41 @@ bool run_one_test(state_vars_t start_state, state_vars_t expected_state, unsigne
   current_state = start_state.current_state;
   // run fsm
   state_t end_state = update_game_state(current_millis);
-  Serial.println("Printing State: ");
-  Serial.print("game_over_flag: ");
-  Serial.println(game_over_flag);
-  Serial.print("pre_direction_change_flag: ");
-  Serial.println(pre_direction_change_flag);
-  Serial.print("time_entered_pdc: ");
-  Serial.println(time_entered_pdc);
-  Serial.print("restart_flag: ");
-  Serial.println(restart_flag);
-  Serial.print("obstacle_move_interval: ");
-  Serial.println(obstacle_move_interval);
-  Serial.print("time_last_obstacle_move: ");
-  Serial.println(time_last_obstacle_move);
-  Serial.print("time_last_dir_chg: ");
-  Serial.println(time_last_dir_chg);
-  Serial.print("time_last_speed_up: ");
-  Serial.println(time_last_speed_up);
-  Serial.print("time_entered_setup: ");
-  Serial.println(time_entered_setup);
-  Serial.print("obstacle_direction: ");
-  Serial.println(obstacle_direction);
-  Serial.print("player_x: ");
-  Serial.println(player_x);
-  Serial.print("player_y: ");
-  Serial.println(player_y);
-  Serial.print("moved: ");
-  Serial.println(moved);
-  Serial.print("start_time: ");
-  Serial.println(start_time);
-  Serial.print("duration: ");
-  Serial.println(duration);
-  Serial.print("end_state: ");
-  Serial.println(end_state);
-  //check if end state macthes expected
+//  Serial.println("Printing State: ");
+//  Serial.print("game_over_flag: ");
+//  Serial.println(game_over_flag);
+//  Serial.print("pre_direction_change_flag: ");
+//  Serial.println(pre_direction_change_flag);
+//  Serial.print("time_entered_pdc: ");
+//  Serial.println(time_entered_pdc);
+//  Serial.print("restart_flag: ");
+//  Serial.println(restart_flag);
+//  Serial.print("obstacle_move_interval: ");
+//  Serial.println(obstacle_move_interval);
+//  Serial.print("time_last_obstacle_move: ");
+//  Serial.println(time_last_obstacle_move);
+//  Serial.print("time_last_dir_chg: ");
+//  Serial.println(time_last_dir_chg);
+//  Serial.print("time_last_speed_up: ");
+//  Serial.println(time_last_speed_up);
+//  Serial.print("time_entered_setup: ");
+//  Serial.println(time_entered_setup);
+//  Serial.print("obstacle_direction: ");
+//  Serial.println(obstacle_direction);
+//  Serial.print("player_x: ");
+//  Serial.println(player_x);
+//  Serial.print("player_y: ");
+//  Serial.println(player_y);
+//  Serial.print("moved: ");
+//  Serial.println(moved);
+//  Serial.print("start_time: ");
+//  Serial.println(start_time);
+//  Serial.print("duration: ");
+//  Serial.println(duration);
+//  Serial.print("end_state: ");
+//  Serial.println(end_state);
+
+  //check if end state matches expected
   bool test_passed = (end_state == expected_state.current_state and
                       game_over_flag == expected_state.game_over_flag and
                       pre_direction_change_flag == expected_state.pre_direction_change_flag and
@@ -178,8 +179,16 @@ bool run_one_test(state_vars_t start_state, state_vars_t expected_state, unsigne
                       moved == expected_state.moved and
                       start_time == expected_state.start_time and
                       duration == expected_state.duration);
-  test_passed = (test_passed and test_list(all_obstacles, expected_state.all_obstacles));
-  return test_passed;
+
+  serial_printf("all_obstacles size: %d\n", all_obstacles->size());
+  serial_printf("expected obstacles size: %d\n", expected_state.all_obstacles->size());
+  
+  bool obstacles_match = test_list(all_obstacles, expected_state.all_obstacles);
+
+  serial_printf("obstacles match? %d\n", obstacles_match);
+  serial_printf("test passed? %d\n", test_passed); 
+  
+  return test_passed and obstacles_match;
 }
 
 /* LOL if anyone knows why this doesn't work let me know */
@@ -222,12 +231,12 @@ bool run_one_test(state_vars_t start_state, state_vars_t expected_state, unsigne
 //}
 
 void add_objects(int test_num) {
-  if (test_num == 2 || test_num == 5) {
+  if (test_num == 4 || test_num == 7) {
     //creates a collision with player
     create_obstacle_at(1, 1, test_obstacles);
     create_obstacle_at(1, 1, test_exp_obstacles);
   }
-  if (test_num == 3) {
+  if (test_num == 5) {
     //creates a collision with player
     create_obstacle_at(5, 1, test_obstacles);
     create_obstacle_at(5, 1, test_exp_obstacles);
@@ -241,20 +250,27 @@ void run_all_tests(void) {
 
   for (int i = 0; i < num_tests; i++) {
     //setup the test
-    state_vars_t input_state = test_cases[i].input;
-    state_vars_t output_state = test_cases[i].output;
+//    state_vars_t input_state = test_cases[i].input;
+//    state_vars_t output_state = test_cases[i].output;
+
+    state_vars_t input_state, output_state;
+    memcpy_P(&input_state, &(test_cases[i].input), sizeof(state_vars_t));
+    memcpy_P(&output_state, &(test_cases[i].output), sizeof(state_vars_t));
+    unsigned long test_mils;
+    memcpy_P(&test_mils, &(test_cases[i].mils), sizeof(unsigned long));
+    
     add_objects(i);
     input_state.all_obstacles = test_obstacles;
     output_state.all_obstacles = test_exp_obstacles;
     //run the test
-    if (!run_one_test(input_state, output_state, test_cases[i].mils)) {
-      Serial.print("FSM TEST FAILED: TEST INDEX ");
+    if (!run_one_test(input_state, output_state, test_mils)) {
+      Serial.print("FSM TEST FAILED: TEST ");
     } else {
-      Serial.print("fsm test passed: test index ");
+      Serial.print("fsm test passed: test ");
     }
-    Serial.print(i);
+    Serial.print(i + 1);
     Serial.print("/");
-    Serial.println(num_tests - 1);
+    Serial.println(num_tests);
     //clear the test
     free_all(test_obstacles); free_all(test_exp_obstacles);
   }
