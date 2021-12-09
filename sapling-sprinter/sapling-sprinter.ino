@@ -7,7 +7,6 @@
 #include "display.h"
 #include "led.h"
 #include "logging.h"
-#include "testing.h"
 
 // Uncomment this for test mode
 #define TESTING
@@ -62,6 +61,12 @@ typedef enum
 } state_t;
 
 state_t current_state;
+
+/**
+ * This being here is a fix because otherwise the test_case_t type can't 
+ * see the state_t type which it needs.
+ */
+#include "testing.h"
 
 void setup()
 {

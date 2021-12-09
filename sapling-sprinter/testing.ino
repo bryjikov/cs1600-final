@@ -9,32 +9,6 @@
 // Only include this code if we are in testing mode.
 #ifdef TESTING
 
-typedef struct state_vars {
-  bool game_over_flag;                     /* Set when the player has collided with an obstacle */
-  bool pre_direction_change_flag;          /* Set when a direction change is upcoming and user should be warned */
-  unsigned long time_entered_pdc;          /* Time (ms) at which the pre direction change state was entered */
-  bool restart_flag;                       /* Set when the game should start over */
-  unsigned obstacle_move_interval;         /* How often (ms) obstacles move */
-  unsigned long time_last_obstacle_move;   /* Time (ms) of last obstacle movement */
-  unsigned long time_last_dir_chg;         /* Time (ms) of last direction change event */
-  unsigned long time_last_speed_up;        /* Time (ms) that obstacles were last sped up */
-  unsigned long time_entered_setup;        /* Time (ms) when SETUP state was entered */
-  direction_t obstacle_direction;          /* Direction of movement for obstacles */
-  int player_x;                            /* Current X position of the player */
-  int player_y;                            /* Current Y position of the player */
-  bool moved;                              /* Set if either the player or obstacles moved since the last display */
-  unsigned long start_time;                /* The time (in milis) when the player begins */
-  unsigned long duration;                  /* The total time that the game lasted */
-  LinkedPointerList<obstacle_t> *all_obstacles;     /* List containing all currently active obstacles */
-  state_t current_state;                   /* state of the fsm */
-} state_vars_t;
-
-typedef struct test_case {
-  state_vars_t input;
-  state_vars_t output;
-  unsigned long mils;
-} test_case_t;
-
 //testing variables:
 LinkedPointerList<obstacle_t> *test_obstacles; /* a list to initially set the obstacles for the test */
 LinkedPointerList<obstacle_t> *test_exp_obstacles; /* a list containing the expected obstacles after the test */
@@ -101,7 +75,7 @@ const test_case_t test_cases[] PROGMEM = {
 
 int num_tests = sizeof(test_cases) / sizeof(test_case_t); /* number of tests to run */
 
-bool run_one_test(state_vars_t start_state, state_vars_t expected_state, unsigned long current_millis);
+bool run_one_test(test_case_t test_case);
 
 bool test_list(LinkedPointerList<obstacle_t> *actual_obstacles, LinkedPointerList<obstacle_t> *expected_obstacles) {
   if (actual_obstacles->size() != expected_obstacles->size()) {
@@ -121,7 +95,10 @@ bool test_list(LinkedPointerList<obstacle_t> *actual_obstacles, LinkedPointerLis
   return true;
 }
 
-bool run_one_test(state_vars_t start_state, state_vars_t expected_state, unsigned long current_millis) {
+bool run_one_test(test_case_t *test_case) {
+  state_vars_t start_state = test_case->input;
+  state_vars_t expected_state = test_case->output;
+
   //set global variables to match desired input
   game_over_flag = start_state.game_over_flag;
   pre_direction_change_flag = start_state.pre_direction_change_flag;
@@ -140,8 +117,9 @@ bool run_one_test(state_vars_t start_state, state_vars_t expected_state, unsigne
   duration = start_state.duration;
   all_obstacles = start_state.all_obstacles;
   current_state = start_state.current_state;
+
   // run fsm
-  state_t end_state = update_game_state(current_millis);
+  state_t end_state = update_game_state(test_case->mils);
 //  Serial.println("Printing State: ");
 //  Serial.print("game_over_flag: ");
 //  Serial.println(game_over_flag);
@@ -198,10 +176,19 @@ bool run_one_test(state_vars_t start_state, state_vars_t expected_state, unsigne
   
   bool obstacles_match = test_list(all_obstacles, expected_state.all_obstacles);
 
-//  serial_printf("obstacles match? %d\n", obstacles_match);
-//  serial_printf("test passed? %d\n", test_passed); 
+  serial_printf("obstacles match? %d\n", obstacles_match);
+  serial_printf("test passed? %d\n", test_passed); 
+
+  bool mocks_match = (
+    mock_led_value == test_case->mock_led_value and
+    mock_displayed_player_x == test_case->mock_displayed_player_x and
+    mock_displayed_player_y == test_case->mock_displayed_player_y and
+    mock_num_display_obstacle_calls == test_case->mock_num_display_obstacle_calls and
+    mock_setup_was_displayed == test_case->mock_setup_was_displayed and
+    mock_game_over_was_displayed == test_case->mock_game_over_was_displayed
+  );
   
-  return test_passed and obstacles_match;
+  return test_passed and obstacles_match and mocks_match; 
 }
 
 void add_objects(int test_num) {
@@ -228,20 +215,14 @@ void run_all_tests(void) {
 
   for (int i = 0; i < num_tests; i++) {
     //setup the test
-//    state_vars_t input_state = test_cases[i].input;
-//    state_vars_t output_state = test_cases[i].output;
+    test_case_t test_case;
+    memcpy_P(&test_case, &test_cases[i], sizeof(test_case_t));
 
-    state_vars_t input_state, output_state;
-    memcpy_P(&input_state, &(test_cases[i].input), sizeof(state_vars_t));
-    memcpy_P(&output_state, &(test_cases[i].output), sizeof(state_vars_t));
-    unsigned long test_mils;
-    memcpy_P(&test_mils, &(test_cases[i].mils), sizeof(unsigned long));
-    
     add_objects(i);
-    input_state.all_obstacles = test_obstacles;
-    output_state.all_obstacles = test_exp_obstacles;
+    test_case.input.all_obstacles = test_obstacles;
+    test_case.output.all_obstacles = test_exp_obstacles;
     //run the test
-    if (!run_one_test(input_state, output_state, test_mils)) {
+    if (!run_one_test(&test_case)) {
       Serial.print("FSM TEST FAILED: TEST ");
     } else {
       Serial.print("fsm test passed: test ");
