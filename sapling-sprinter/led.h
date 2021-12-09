@@ -4,3 +4,5 @@
 */
 
 #define LED_PIN 6
+
+int led_brightness = 0;

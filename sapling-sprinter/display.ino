@@ -55,8 +55,13 @@ void initialize_lcd(void)
 */
 void display_player(byte x, byte y)
 {
+#ifdef TESTING
+  mock_displayed_player_x = x;
+  mock_displayed_player_y = y;
+#else
   lcd.setCursor(x, y);
   lcd.write(byte(PLAYER_CUSTOM_CHAR));
+#endif
 }
 
 /*
@@ -64,8 +69,12 @@ void display_player(byte x, byte y)
 */
 void display_obstacle(obstacle_t *obs)
 {
+#ifdef TESTING
+  mock_num_display_obstacle_calls++;
+#else
   lcd.setCursor(obs->x, obs->y);
   lcd.write(byte(OBSTACLE_CUSTOM_CHAR));
+#endif
 }
 
 /*
@@ -73,9 +82,13 @@ void display_obstacle(obstacle_t *obs)
 */
 void display_setup(void)
 {
+#ifdef TESTING
+  mock_setup_was_displayed = true;
+#else
   clear();
   lcd.setCursor(LCD_TEXT_CENTER_X, LCD_TEXT_CENTER_Y);
   lcd.print("Ready?  :O");
+#endif
 }
 
 /*
@@ -83,12 +96,16 @@ void display_setup(void)
 */
 void display_game_over(unsigned long total_time)
 {
+#ifdef TESTING
+  mock_game_over_was_displayed = true;
+#else
   clear();
   lcd.setCursor(LCD_TEXT_CENTER_X, LCD_TEXT_CENTER_Y);
   lcd.print("Game Over!");
   lcd.setCursor(LCD_TEXT_CENTER_X - 1, LCD_TEXT_CENTER_Y + 1);
   lcd.print("Score: ");
   lcd.print(total_time);
+#endif
 }
 
 /*

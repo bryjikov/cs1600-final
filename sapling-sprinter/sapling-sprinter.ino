@@ -258,6 +258,7 @@ state_t update_game_state(unsigned long mils)
         debug("Transition: NORMAL -> PRE_DIRECTION_CHANGE");
         next_state = PRE_DIRECTION_CHANGE;
         pre_direction_change_flag = false;
+        led_brightness = 0; // Make the LED start pulsating from a consistent state
       } else {  // Transition 2-2
         update_for_normal_gameplay(mils);
       }
