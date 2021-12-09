@@ -29,3 +29,17 @@ static void test_assert_underyling(bool condition, __FlashStringHelper *conditio
  * which can be printed if the assertion fails.
  */
 #define test_assert(cond) test_assert_underyling(cond, F(#cond))
+
+/**
+ * Globals for mocked functions
+ */
+int mock_led_value;                       /* PWM value of LED when in PRE_DIRECTION_CHANGE */
+int mock_joy_x_initial;                     /* Allows control of initial joystick X reading */
+int mock_joy_y_initial;                     /* Ditto for initial joystick Y reading */
+int mock_joy_x;                             /* Allows control of joystick X reading */
+int mock_joy_y;                             /* Ditto for joystick Y reading */
+byte mock_displayed_player_x;               /* Player X as displayed by display_player() */
+byte mock_displayed_player_y;               /* Player Y as displayed by display_player() */
+unsigned mock_num_display_obstacle_calls;   /* Number of times display_obstacle() was called */
+bool mock_setup_was_displayed;              /* Was display_setup() called? */
+bool mock_game_over_was_displayed;          /* Was display_game_over() called? */

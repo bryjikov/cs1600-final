@@ -21,9 +21,8 @@ int joystickInitialPosY;
 void initialize_joystick(void)
 {
 #ifdef TESTING
-  // TODO: under testing, these should be set by globals
-  joystickInitialPosX = 0;
-  joystickInitialPosY = 0;
+  joystickInitialPosX = mock_joy_x_initial;
+  joystickInitialPosY = mock_joy_y_initial;
 #else
   joystickInitialPosX = analogRead(JOY_X);
   joystickInitialPosY = analogRead(JOY_Y);
@@ -57,9 +56,8 @@ int convert_joystick_pos(int pos, int init)
 void update_joystick(void)
 {
 #ifdef TESTING
-  // TODO: Set these using globals controlled by tester
-  int xValue = 0;
-  int yValue = 0;
+  int xValue = mock_joy_x;
+  int yValue = mock_joy_y;
 #else
   int xValue = analogRead(JOY_X);
   int yValue = analogRead(JOY_Y);

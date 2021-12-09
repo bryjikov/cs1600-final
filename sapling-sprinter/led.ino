@@ -7,8 +7,19 @@
 #define PWM_MIN 255
 #define PWM_MAX 0
 
-int led_brightness = 0;
 bool brightness_ascending = true;
+
+/**
+ * Writes a given PWM value to the LED (or sets a global if in testing mode).
+ */
+void write_to_led(int value)
+{
+#ifdef TESTING
+  mock_led_value = value;
+#else
+  analogWrite(LED_PIN, value);
+#endif
+}
 
 /**
    Update the pulsing LED's brightness to cycle between the
@@ -19,7 +30,7 @@ void updateLED(void)
   // Only pulsate the LED in the pre-direction change state
   if (current_state == PRE_DIRECTION_CHANGE) {
     // set the LED at current brightness
-    analogWrite(LED_PIN, led_brightness);
+    write_to_led(led_brightness);
 
     // increase/decrease brightness
     if (brightness_ascending) {
@@ -29,10 +40,10 @@ void updateLED(void)
     }
 
     // change direction of pulsing if at lower/upper ends
-    if (led_brightness == PWM_MIN || led_brightness == PWM_MAX) {
+    if (led_brightness <= PWM_MIN || led_brightness >= PWM_MAX) {
       brightness_ascending = !brightness_ascending;
     }
   } else {
-    analogWrite(LED_PIN, PWM_MIN);
+    write_to_led(PWM_MIN);
   }
 }
