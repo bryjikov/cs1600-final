@@ -1,9 +1,13 @@
 /*
    timer.ino
    Timer-related functionality.
+
+   Note: The timer functions only do something if TESTING is disabled.
+   These aren't needed during testing mode and will break the MKR.
 */
 
 void timer_setup() {
+#ifndef TESTING
   debug("Setting up timer for LED");
   //temporarily disable interrupts
   noInterrupts();
@@ -28,15 +32,17 @@ void timer_setup() {
 
   //re-enable interrupts
   interrupts();
+#endif
 }
 
-
+#ifndef TESTING
 ISR(TIMER2_COMPA_vect) {
   //timer interrupt just calls updateLED
   updateLED();
 }
+#endif
 
 /*
- * sources:
- * 1: https://maker.pro/arduino/projects/timer-interrupts-improve-your-arduino-programming-skills
- */
+   sources:
+   1: https://maker.pro/arduino/projects/timer-interrupts-improve-your-arduino-programming-skills
+*/

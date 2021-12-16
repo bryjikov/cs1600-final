@@ -113,5 +113,9 @@ void display_game_over(unsigned long total_time)
 */
 void clear()
 {
+#ifdef TESTING
+  // Don't do anything at all
+#else
   lcd.clear();
+#endif
 }

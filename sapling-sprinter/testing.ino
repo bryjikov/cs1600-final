@@ -41,62 +41,76 @@ LinkedPointerList<obstacle_t> *test_exp_obstacles; /* a list containing the expe
 
 const test_case_t test_cases[] PROGMEM = {
   // TESTS THAT HAVE OBSTACLES
-  {{false, false, 0, false, 100, 50, 95, 90, 0, 1, 1, 1, false, 0, 0, NULL, NORMAL},
-   {true, false, 0, false, 100, 50, 95, 90, 0, 1, 1, 1, false, 0, 100, NULL, NORMAL},
-   100},
+  { {false, false, 0, false, 100, 50, 95, 90, 0, RIGHT, 1, 1, false, 0, 0, NULL, NORMAL},
+    {true, false, 0, false, 100, 50, 95, 90, 0, RIGHT, 1, 1, false, 0, 100, NULL, NORMAL},
+    100
+  },
 
-  {{false, false, 29000, false, 0, 31900, 29000, 31000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
-   {false, false, 29000, false, 0, 31900, 29000, 31000, 0, 0, 1, 1, false, 0, 0, NULL, NORMAL},
-   32000},
+  { {false, false, 29000, false, 0, 31900, 29000, 31000, 0, RIGHT, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
+    {false, false, 29000, false, 0, 31900, 29000, 31000, 0, LEFT, 1, 1, false, 0, 0, NULL, NORMAL},
+    32000
+  },
 
-  {{false, false, 29000, false, 1000, 29500, 29000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
-   {true, false, 29000, false, 1000, 29500, 29000, 29000, 0, 1, 1, 1, false, 0, 30000, NULL, PRE_DIRECTION_CHANGE},
-   30000},
+  { {false, false, 29000, false, 1000, 29500, 29000, 29000, 0, RIGHT, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
+    {true, false, 29000, false, 1000, 29500, 29000, 29000, 0, RIGHT, 1, 1, false, 0, 30000, NULL, PRE_DIRECTION_CHANGE},
+    30000
+  },
 
-  {{true, false, 0, false, 100, 50, 95, 90, 0, 1, 1, 1, false, 0, 100, NULL, NORMAL},
-   {false, false, 0, false, 100, 50, 95, 90, 0, 1, 1, 1, false, 0, 100, NULL, GAME_OVER},
-   100},
+  { {true, false, 0, false, 100, 50, 95, 90, 0, RIGHT, 1, 1, false, 0, 100, NULL, NORMAL},
+    {false, false, 0, false, 100, 50, 95, 90, 0, RIGHT, 1, 1, false, 0, 100, NULL, GAME_OVER},
+    100
+  },
 
-  {{false, false, 0, false, 800, 12000, 11000, 13000, 0, 1, 5, 6, false, 0, 0, NULL, NORMAL},
-   {false, false, 0, false, 800, 14000, 11000, 13000, 0, 1, 5, 6, false, 0, 0, NULL, NORMAL},
-   14000},
+  { {false, false, 0, false, 800, 12000, 11000, 13000, 0, RIGHT, 5, 6, false, 0, 0, NULL, NORMAL},
+    {false, false, 0, false, 800, 14000, 11000, 13000, 0, RIGHT, 5, 6, false, 0, 0, NULL, NORMAL},
+    14000
+  },
 
-  {{true, false, 29000, false, 1000, 29500, 29000, 29000, 0, 1, 1, 1, false, 0, 30000, NULL, PRE_DIRECTION_CHANGE},
-   {false, false, 29000, false, 1000, 29500, 29000, 29000, 0, 1, 1, 1, false, 0, 30000, NULL, GAME_OVER},
-   30000},
+  { {true, false, 29000, false, 1000, 29500, 29000, 29000, 0, RIGHT, 1, 1, false, 0, 30000, NULL, PRE_DIRECTION_CHANGE},
+    {false, false, 29000, false, 1000, 29500, 29000, 29000, 0, RIGHT, 1, 1, false, 0, 30000, NULL, GAME_OVER},
+    30000
+  },
 
   // TESTS THAT DO NOT HAVE OBSTACLES
-  {{false, false, 0, false, 0, 0, 0, 0, 0, 0, 0, 0, false, 0, 0, NULL, SETUP},
-   {false, false, 0, false, 0, 0, 0, 0, 0, 0, 0, 0, false, 0, 0, NULL, SETUP},
-   1999},
-  
-  {{false, false, 0, false, 0, 0, 0, 0, 0, 0, 0, 0, false, 0, 0, NULL, SETUP},
-   {false, false, 0, false, 1000, 0, 0, 0, 0, 0, 10, 3, true, 2000, 0, NULL, NORMAL},
-   2000},
+  { {false, false, 0, false, 0, 0, 0, 0, 0, LEFT, 0, 0, false, 0, 0, NULL, SETUP},
+    {false, false, 0, false, 0, 0, 0, 0, 0, LEFT, 0, 0, false, 0, 0, NULL, SETUP},
+    1999
+  },
 
-  {{false, false, 0, false, 0, 0, 0, 0, 1000, 0, 0, 0, false, 0, 0, NULL, SETUP},
-   {false, false, 0, false, 1000, 0, 0, 0, 0, 0, 10, 3, true, 3000, 0, NULL, NORMAL},
-   3000},
-  
-  {{false, false, 0, false, 1000, 29500, 19000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, NORMAL},
-   {false, true, 30000, false, 1000, 29500, 30000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, NORMAL},
-   30000},
+  { {false, false, 0, false, 0, 0, 0, 0, 0, LEFT, 0, 0, false, 0, 0, NULL, SETUP},
+    {false, false, 0, false, 1000, 0, 0, 0, 0, LEFT, 10, 3, true, 2000, 0, NULL, NORMAL},
+    2000
+  },
 
-  {{false, true, 30000, false, 1000, 29500, 30000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, NORMAL},
-   {false, false, 30000, false, 1000, 29500, 30000, 29000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
-   30001},
+  { {false, false, 0, false, 0, 0, 0, 0, 1000, LEFT, 0, 0, false, 0, 0, NULL, SETUP},
+    {false, false, 0, false, 1000, 0, 0, 0, 0, LEFT, 10, 3, true, 3000, 0, NULL, NORMAL},
+    3000
+  },
 
-  {{false, false, 29000, false, 1000, 29500, 29000, 26000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
-   {false, false, 29000, false, 950, 29500, 29000, 30000, 0, 1, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
-   30000},
+  { {false, false, 0, false, 1000, 29500, 19000, 29000, 0, RIGHT, 1, 1, false, 0, 0, NULL, NORMAL},
+    {false, true, 30000, false, 1000, 29500, 30000, 29000, 0, RIGHT, 1, 1, false, 0, 0, NULL, NORMAL},
+    30000
+  },
 
-  {{false, false, 14000, false, 500, 13800, 13800, 13800, 0, 0, 10, 1, false, 2000, 12000, NULL, GAME_OVER},
-   {false, false, 14000, false, 500, 13800, 13800, 13800, 0, 0, 10, 1, false, 2000, 12000, NULL, GAME_OVER},
-   14000},
+  { {false, true, 30000, false, 1000, 29500, 30000, 29000, 0, RIGHT, 1, 1, false, 0, 0, NULL, NORMAL},
+    {false, false, 30000, false, 1000, 29500, 30000, 29000, 0, RIGHT, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
+    30001
+  },
 
-  {{false, false, 14000, true, 500, 13800, 13800, 13800, 0, 1, 10, 1, false, 2000, 12000, NULL, GAME_OVER},
-   {false, false, 14000, false, 500, 13800, 13800, 13800, 14000, 1, 10, 1, false, 2000, 12000, NULL, SETUP},
-   14000}
+  { {false, false, 29000, false, 1000, 29500, 29000, 26000, 0, RIGHT, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
+    {false, false, 29000, false, 950, 29500, 29000, 30000, 0, RIGHT, 1, 1, false, 0, 0, NULL, PRE_DIRECTION_CHANGE},
+    30000
+  },
+
+  { {false, false, 14000, false, 500, 13800, 13800, 13800, 0, LEFT, 10, 1, false, 2000, 12000, NULL, GAME_OVER},
+    {false, false, 14000, false, 500, 13800, 13800, 13800, 0, LEFT, 10, 1, false, 2000, 12000, NULL, GAME_OVER},
+    14000
+  },
+
+  { {false, false, 14000, true, 500, 13800, 13800, 13800, 0, RIGHT, 10, 1, false, 2000, 12000, NULL, GAME_OVER},
+    {false, false, 14000, false, 500, 13800, 13800, 13800, 14000, RIGHT, 10, 1, false, 2000, 12000, NULL, SETUP},
+    14000
+  }
 };
 
 int num_tests = sizeof(test_cases) / sizeof(test_case_t); /* number of tests to run */
@@ -140,41 +154,10 @@ bool run_one_test(state_vars_t start_state, state_vars_t expected_state, unsigne
   duration = start_state.duration;
   all_obstacles = start_state.all_obstacles;
   current_state = start_state.current_state;
+
   // run fsm
   state_t end_state = update_game_state(current_millis);
-//  Serial.println("Printing State: ");
-//  Serial.print("game_over_flag: ");
-//  Serial.println(game_over_flag);
-//  Serial.print("pre_direction_change_flag: ");
-//  Serial.println(pre_direction_change_flag);
-//  Serial.print("time_entered_pdc: ");
-//  Serial.println(time_entered_pdc);
-//  Serial.print("restart_flag: ");
-//  Serial.println(restart_flag);
-//  Serial.print("obstacle_move_interval: ");
-//  Serial.println(obstacle_move_interval);
-//  Serial.print("time_last_obstacle_move: ");
-//  Serial.println(time_last_obstacle_move);
-//  Serial.print("time_last_dir_chg: ");
-//  Serial.println(time_last_dir_chg);
-//  Serial.print("time_last_speed_up: ");
-//  Serial.println(time_last_speed_up);
-//  Serial.print("time_entered_setup: ");
-//  Serial.println(time_entered_setup);
-//  Serial.print("obstacle_direction: ");
-//  Serial.println(obstacle_direction);
-//  Serial.print("player_x: ");
-//  Serial.println(player_x);
-//  Serial.print("player_y: ");
-//  Serial.println(player_y);
-//  Serial.print("moved: ");
-//  Serial.println(moved);
-//  Serial.print("start_time: ");
-//  Serial.println(start_time);
-//  Serial.print("duration: ");
-//  Serial.println(duration);
-//  Serial.print("end_state: ");
-//  Serial.println(end_state);
+
   //check if end state matches expected
   bool test_passed = (end_state == expected_state.current_state and
                       game_over_flag == expected_state.game_over_flag and
@@ -193,14 +176,8 @@ bool run_one_test(state_vars_t start_state, state_vars_t expected_state, unsigne
                       start_time == expected_state.start_time and
                       duration == expected_state.duration);
 
-//  serial_printf("all_obstacles size: %d\n", all_obstacles->size());
-//  serial_printf("expected obstacles size: %d\n", expected_state.all_obstacles->size());
-  
   bool obstacles_match = test_list(all_obstacles, expected_state.all_obstacles);
 
-//  serial_printf("obstacles match? %d\n", obstacles_match);
-//  serial_printf("test passed? %d\n", test_passed); 
-  
   return test_passed and obstacles_match;
 }
 
@@ -226,20 +203,20 @@ void run_all_tests(void) {
   test_obstacles = new LinkedPointerList<obstacle_t>();
   test_exp_obstacles = new LinkedPointerList<obstacle_t>();
 
+  serial_printf("Number of FSM tests to run: %d\n", num_tests);
+
   for (int i = 0; i < num_tests; i++) {
     //setup the test
-//    state_vars_t input_state = test_cases[i].input;
-//    state_vars_t output_state = test_cases[i].output;
-
     state_vars_t input_state, output_state;
     memcpy_P(&input_state, &(test_cases[i].input), sizeof(state_vars_t));
     memcpy_P(&output_state, &(test_cases[i].output), sizeof(state_vars_t));
     unsigned long test_mils;
     memcpy_P(&test_mils, &(test_cases[i].mils), sizeof(unsigned long));
-    
+
     add_objects(i);
     input_state.all_obstacles = test_obstacles;
     output_state.all_obstacles = test_exp_obstacles;
+
     //run the test
     if (!run_one_test(input_state, output_state, test_mils)) {
       Serial.print("FSM TEST FAILED: TEST ");
@@ -249,6 +226,7 @@ void run_all_tests(void) {
     Serial.print(i + 1);
     Serial.print("/");
     Serial.println(num_tests);
+
     //clear the test
     free_all(test_obstacles); free_all(test_exp_obstacles);
   }

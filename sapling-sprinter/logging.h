@@ -29,11 +29,11 @@ void serial_printf(char *format, ...)
 }
 
 /**
- * Prints a string literal to Serial, but stores the string
- * in flash memory to save RAM.
- * 
- * More info: https://playground.arduino.cc/Learning/Memory/
- */
+   Prints a string literal to Serial, but stores the string
+   in flash memory to save RAM.
+
+   More info: https://playground.arduino.cc/Learning/Memory/
+*/
 #define PRINTLN_FLASH(str) Serial.println(F(str))
 
 /*
@@ -47,7 +47,7 @@ void serial_printf(char *format, ...)
    Print an error message (possibly using a format string),
    and then halt the system (loop forever).
 */
-void halt_with_error_underlying(char *func, char *format, ...)
+void halt_with_error_underlying(const char *func, char *format, ...)
 {
   char buf[LOG_BUFFER_SIZE];
   FORMAT_TO_BUFFER(buf, LOG_BUFFER_SIZE, format);
@@ -65,12 +65,12 @@ void halt_with_error_underlying(char *func, char *format, ...)
 // Print a debug message (possibly using a format string). This only
 // does anything if DEBUG_LOGGING is defined; otherwise, it is a no-op.
 #ifdef DEBUG_LOGGING
-void debug_underlying(char *func, char *format, ...)
+void debug_underlying(const char *func, char *format, ...)
 {
   char buf[LOG_BUFFER_SIZE];
   FORMAT_TO_BUFFER(buf, LOG_BUFFER_SIZE, format);
   serial_printf("[DEBUG] %s: %s\n", func, buf);
 }
 #else
-void debug_underlying(char *func, char *format, ...) {}
+void debug_underlying(const char *func, char *format, ...) {}
 #endif
